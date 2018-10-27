@@ -1,0 +1,13 @@
+name: neo4j_model
+version: 0.1.0
+
+authors:
+  - Aaron Namba <aaron@aaronnamba.com>
+
+crystal: 0.26.1
+
+license: MIT
+
+dependencies:
+  neo4j:
+    github: jgaskins/neo4j.cr
