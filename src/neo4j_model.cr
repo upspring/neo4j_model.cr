@@ -25,10 +25,43 @@ module Neo4j
     alias Changeset = NamedTuple(property: Symbol, old_value: Neo4j::Type?, new_value: Neo4j::Type)
 
     macro included
+      class QueryResult
+        include Enumerable(Array({{@type.id}}))
+
+        getter objects : Array({{@type.id}})
+        getter rels : Array(Neo4j::Relationship)
+
+        def initialize(@objects, @rels)
+        end
+
+        def each
+          @objects.each do |obj|
+            yield obj
+          end
+        end
+
+        def each_with_rel
+          return unless @rels.size == @objects.size
+
+          @objects.each_with_index do |obj, index|
+            yield obj, @rels[index]
+          end
+        end
+
+        def [](index)
+          @objects[index]
+        end
+
+        def size
+          @objects.size
+        end
+      end
+
       # use leading underscore to indicate a property/ivar that should *not* be persisted to neo4j
       property _uuid : String # special because it is persisted on create, but never on update
       property _node : Neo4j::Node
       property _errors = [] of Neo4j::Error
+      property _rel : Neo4j::Relationship?
 
       @@label : String = "{{@type.name}}"
       @@limit = 500 # for safety, lift as needed; FIXME once we have a query proxy system
@@ -49,10 +82,22 @@ module Neo4j
       def self.execute(cypher_query : String, values = ({} of Symbol => Neo4j::Type))
         hash_with_string_keys = {} of String => Neo4j::Type
         values.each { |key, value| hash_with_string_keys[key.to_s] = value }
-        connection.execute(cypher_query, hash_with_string_keys).map { |(node)| new(from: node) }
+
+        objs = [] of {{@type.id}}
+        rels = [] of Neo4j::Relationship
+        connection.execute(cypher_query, hash_with_string_keys).each do |result|
+          if (node = result[0]?)
+            objs << new(from: node)
+          end
+          if (rel = result[1]?)
+            rels << rel.as(Neo4j::Relationship)
+          end
+        end
+
+        QueryResult.new(objs, rels)
       end
 
-      def self.all : Array({{@type}})
+      def self.all
         execute("MATCH (n:#{label}) RETURN n LIMIT #{@@limit}")
       end
 
@@ -92,6 +137,42 @@ module Neo4j
         @_uuid = node.properties["uuid"].as(String)
         set_attributes(from: node)
       end
+
+      # equivalent of ActiveNode has_one :out
+      macro has_one(klass, reltype, *, name = "", unique = true)
+        \{% name = (name == "" ? klass.id.underscore : name) %}
+        def \{{name.id}}
+          \{{klass.id}}.execute("MATCH (n:#{label})-[r:\{{reltype.id}}]->(m:#{\{{klass.id}}.label}) RETURN m, r LIMIT 1").each_with_rel do |obj, rel|
+            obj._rel = rel ; return obj
+          end
+        end
+      end # macro has_one
+
+      # equivalent of ActiveNode has_many :out
+      macro has_many(klass, reltype, *, name = "", unique = true)
+        \{% name = (name == "" ? klass.id.underscore + 's' : name) %}
+        def \{{name.id}}
+          \{{klass.id}}.execute("MATCH (n:#{label})-[r:\{{reltype.id}}]->(m:#{\{{klass.id}}.label}) RETURN m, r LIMIT #{@@limit}")
+        end
+      end # macro has_many
+
+      # equivalent of ActiveNode has_one :in
+      macro belongs_to(klass, reltype, *, name = "", unique = true)
+        \{% name = (name == "" ? klass.id.underscore : name) %}
+        def \{{name.id}}
+        \{{klass.id}}.execute("MATCH (n:#{label})<-[r:\{{reltype.id}}]-(m:#{\{{klass.id}}.label}) RETURN m, r LIMIT 1").each_with_rel do |obj, rel|
+            obj._rel = rel ; return obj
+          end
+        end
+      end # macro belongs_to
+
+      # equivalent of ActiveNode has_many :in
+      macro belongs_to_many(klass, reltype, *, name = "", unique = true)
+        \{% name = (name == "" ? klass.id.underscore + 's' : name) %}
+        def \{{name.id}}
+          \{{klass.id}}.execute("MATCH (n:#{label})<-[r:\{{reltype.id}}]-(m:#{\{{klass.id}}.label}) RETURN m, r LIMIT #{@@limit}")
+        end
+      end # macro belongs_to_many
     end # macro included
 
     def id
@@ -99,6 +180,9 @@ module Neo4j
     end
     def uuid
       @_uuid
+    end
+    def rel
+      @_rel
     end
 
     def label
@@ -152,6 +236,11 @@ module Neo4j
       if (db_version = self.class.find(uuid))
         set_attributes(from: db_version.node)
       end
+    end
+
+    def update(hash : Hash(String, T)) forall T
+      set_attributes(hash)
+      save
     end
 
     def save

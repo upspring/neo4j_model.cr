@@ -1,14 +1,17 @@
 # neo4j_model
 
-Very rough, do not use (yet?). I am very new to Crystal (coming over from Ruby).
+Current status: Very rough, do not use (yet?). Also note that I am very new to Crystal (coming over from Ruby).
 
-The idea is to layer on just enough functionality on top of neo4j.cr so that I can build simple model classes for a PoC app.
+The goal for now is to layer just enough property and association functionality on top of [neo4j.cr](https://github.com/jgaskins/neo4j.cr) so that I can build a simple PoC app that talks to an existing database.
 
 Implemented so far:
 
 * Map Crystal properties to Neo4J node properties
 * find, where (greatly simplified, exact attribute matches only)
 * new, save, reload
+* simple associations (has_one, has_many, belongs_to, belongs_to_many) - NOTE: read-only at present
+
+The association types do assume/impose a convention on the relationship direction, but I find it easier to think of relationships this way, rather than stick with Neo4j's required yet meaningless direction (the way ActiveNode does with the :in/:out parameter).
 
 ## Installation
 
@@ -25,8 +28,23 @@ dependencies:
 ```crystal
 require "neo4j_model"
 
+class Server
+  include Neo4j::Model
+
+  has_many Website, reltype: :HOSTS # adds .websites
+  has_many Website, name: :inactive_websites, reltype: :USED_TO_HOST # adds .inactive_websites
+
+  property name : String?
+  property created_at : Time?
+  property updated_at : Time?
+end
+
 class Website
   include Neo4j::Model
+
+  belongs_to Server, reltype: :HOSTS
+
+  property _internal : Bool # properties starting with _ will not be synchronized with database
 
   property name : String?
   property size_bytes : Integer?
@@ -34,11 +52,19 @@ class Website
   property supports_http2 : Bool = false
   property nameservers : Array(String) = [] of String # defining it as an Array triggers the auto-serializer
   property some_hash : Hash(String, String)? # hashes ought to work too, but... not tested yet
+  property created_at : Time?
+  property updated_at : Time?
+end
 ```
 
 ## TODO
 
 * set created_at and updated_at timestamps on save (if present)
+* make associations writable
+* callbacks
+* validations
+* query proxy to support chaining (especially chaining of associations)
+* scopes?
 
 ## Contributing
 
