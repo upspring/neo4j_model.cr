@@ -52,19 +52,20 @@ class Website
   property supports_http2 : Bool = false
   property nameservers : Array(String) = [] of String # defining it as an Array triggers the auto-serializer
   property some_hash : Hash(String, String)? # hashes ought to work too, but... not tested yet
-  property created_at : Time?
-  property updated_at : Time?
+  property created_at : Time? = Time.utc_now
+  property updated_at : Time? = Time.utc_now
 end
 ```
 
 ## TODO
 
 * set created_at and updated_at timestamps on save (if present)
-* make associations writable
+* make associations writable and queryable
+* make relationship properties writable (probably via custom rel class, similar to ActiveRel)
 * callbacks
 * validations
 * query proxy to support chaining (especially chaining of associations)
-* scopes?
+* scopes
 
 ## Contributing
 
