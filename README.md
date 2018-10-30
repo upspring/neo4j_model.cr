@@ -32,18 +32,18 @@ require "neo4j_model"
 class Server
   include Neo4j::Model
 
-  has_many Website, reltype: :HOSTS # adds .websites
-  has_many Website, name: :inactive_websites, reltype: :USED_TO_HOST # adds .inactive_websites
+  has_many Website, rel_type: :HOSTS # adds .websites
+  has_many Website, name: :inactive_websites, rel_type: :USED_TO_HOST # adds .inactive_websites
 
   property name : String?
-  property created_at : Time?
-  property updated_at : Time?
+  property created_at : Time? = Time.utc_now
+  property updated_at : Time? = Time.utc_now
 end
 
 class Website
   include Neo4j::Model
 
-  belongs_to Server, reltype: :HOSTS
+  belongs_to Server, rel_type: :HOSTS
 
   property _internal : Bool # properties starting with _ will not be synchronized with database
 
