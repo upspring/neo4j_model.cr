@@ -67,6 +67,10 @@ module Neo4j
         execute("MATCH (n:#{label}) RETURN n LIMIT 1").first
       end
 
+      def self.first?
+        execute("MATCH (n:#{label}) RETURN n LIMIT 1").first?
+      end
+
       def self.where(**params)
         execute("MATCH (n:#{label}) " + params.keys.map { |k| "WHERE (n.`#{k}` = $#{k})" }.join(' ') + " RETURN n LIMIT #{@@limit}", params)
       end
@@ -74,11 +78,11 @@ module Neo4j
       def self.find(uuid : String?)
         return nil unless uuid
 
-        where(uuid: uuid).first
+        where(uuid: uuid).first?
       end
 
       def self.find_by(**params)
-        where(**params).first
+        where(**params).first?
       end
     end
   end
