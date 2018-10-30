@@ -9,6 +9,7 @@ Implemented so far:
 * Map Crystal properties to Neo4J node properties
 * find, where (greatly simplified, exact attribute matches only)
 * new, save, reload
+* sets created_at property on create and updated_at property on save (if present)
 * simple associations (has_one, has_many, belongs_to, belongs_to_many) - NOTE: read-only at present
 
 The association types do assume/impose a convention on the relationship direction, but I find it easier to think of relationships this way, rather than stick with Neo4j's required yet meaningless direction (the way ActiveNode does with the :in/:out parameter).
@@ -59,7 +60,6 @@ end
 
 ## TODO
 
-* set created_at and updated_at timestamps on save (if present)
 * make associations writable and queryable
 * make relationship properties writable (probably via custom rel class, similar to ActiveRel)
 * callbacks

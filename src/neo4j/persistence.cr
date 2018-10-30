@@ -7,7 +7,11 @@ module Neo4j
     alias Integer = Int8 | Int16 | Int32 | Int64
     alias PropertyType = Nil | Bool | String | Integer | Float64 | Array(PropertyType) | Hash(String, PropertyType)
 
-    alias Changeset = NamedTuple(property: Symbol, old_value: Neo4j::Type, new_value: Neo4j::Type)
+    alias Changeset = NamedTuple(old_value: Neo4j::Type, new_value: Neo4j::Type)
+
+    macro included
+      property _changes = Hash(Symbol, Changeset).new
+    end
 
     def persisted?
       @_persisted
@@ -56,51 +60,61 @@ module Neo4j
     end
 
     def save
-      # first, build changeset
-      changes = [] of Changeset
-
-      {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
+      {% for var in @type.instance_vars.reject { |v| v.id =~ /^_/ } %}
         {% if var.type <= Array || (var.type.union? && var.type.union_types.includes?(Array)) %}
         if (old_value = @_node.properties["{{var}}"]?) != (new_value = @{{var}}.to_json)
-          changes << { property: :{{var}}, old_value: old_value, new_value: new_value }
+          @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
         end
         {% elsif var.type <= Hash || (var.type.union? && var.type.union_types.includes?(Hash)) %}
         hash_with_string_keys = {} of String => Type
         @{{var}}.each { |key, value| hash_with_string_keys[key.to_s] = value }
         if (old_value = @_node.properties["{{var}}"]?) != (new_value = hash_with_string_keys.to_json)
-          changes << { property: :{{var}}, old_value: old_value, new_value: new_value }
+          @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
         end
         {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
         if (local_var = @{{var}}) # remember, this type of guard doesn't work with instance vars, need to snapshot to local var
           if (old_value = @_node.properties["{{var}}"]?) != (new_value = local_var.epoch)
-            changes << { property: :{{var}}, old_value: old_value, new_value: new_value }
-          elsif (old_value = @_node.properties["{{var}}"]?) != (new_value = nil)
-            changes << { property: :{{var}}, old_value: old_value, new_value: new_value }
+            @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
           end
+        elsif (old_value = @_node.properties["{{var}}"]?) != (new_value = nil)
+          @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
         end
         {% else %}
         if (old_value = @_node.properties["{{var}}"]?) != (new_value = @{{var}})
-          changes << { property: :{{var}}, old_value: old_value, new_value: new_value }
+          @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
         end
         {% end %}
       {% end %}
 
       # then persist changeset to database
-      if changes.any?
-        values = Hash.zip(changes.map(&.[:property]), changes.map(&.[:new_value]))
+      @_changes.reject!(:created_at) # reject changes to created_at once set
+
+      unless @_changes.empty?
+        puts @_changes.inspect
+
+        if (t = @created_at) && !@_node.properties["created_at"]?
+          @_changes[:created_at] = { old_value: nil, new_value: t.epoch }
+        end
+        if (t = @updated_at)
+          @_changes[:updated_at] = { old_value: t.epoch, new_value: (@updated_at = Time.utc_now).epoch }
+        end
+
+        # values = @_changes.transform_values { |v| v[:new_value] } # why doesn't this work?
+        values = Hash.zip(@_changes.keys, @_changes.values.map { |v| v[:new_value] })
         values[:uuid] = @_uuid
 
         if persisted?
-          self.class.execute("MATCH (n:#{label}) WHERE (n.uuid = $uuid) SET " + changes.map { |c| "n.`#{c[:property]}` = $#{c[:property]}" }.join(", "), values)
+          self.class.execute("MATCH (n:#{label}) WHERE (n.uuid = $uuid) SET " + @_changes.map { |prop, c| "n.`#{prop}` = $#{prop}" }.join(", "), values)
         else
-          self.class.execute("CREATE (n) SET n.uuid = $uuid, " + changes.map { |c| "n.`#{c[:property]}` = $#{c[:property]}" }.join(", ") + ", n:#{label}", values)
+          self.class.execute("CREATE (n) SET n.uuid = $uuid, " + @_changes.map { |prop, c| "n.`#{prop}` = $#{prop}" }.join(", ") + ", n:#{label}", values)
         end
-
-        true # FIXME
       end
 
       # finally, update internal node representation
-      changes.each { |c| @_node.properties["#{c[:property]}"] = c[:new_value] }
+      @_changes.each { |prop, changeset| @_node.properties["#{prop}"] = changeset[:new_value] }
+      @_changes.clear
+
+      true # FIXME
     end
   end
 end
