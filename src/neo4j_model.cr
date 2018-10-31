@@ -6,5 +6,5 @@ require "./neo4j/associations"
 
 # TODO: Write documentation for `Neo4jModel`
 module Neo4jModel
-  VERSION = "0.2.0"
+  VERSION = "0.3.0"
 end

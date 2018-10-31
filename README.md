@@ -11,6 +11,7 @@ Implemented so far:
 * new, save, reload
 * sets created_at property on create and updated_at property on save (if present)
 * simple associations (has_one, has_many, belongs_to, belongs_to_many) - NOTE: read-only at present
+* query proxy to allow method chaining (query is not executed until you try to access a record)
 
 The association types do assume/impose a convention on the relationship direction, but I find it easier to think of relationships this way, rather than stick with Neo4j's required yet meaningless direction (the way ActiveNode does with the :in/:out parameter).
 
@@ -60,11 +61,10 @@ end
 
 ## TODO
 
-* make associations writable and queryable
+* make associations writable
 * make relationship properties writable (probably via custom rel class, similar to ActiveRel)
 * callbacks
 * validations
-* query proxy to support chaining (especially chaining of associations)
 * scopes
 
 ## Contributing

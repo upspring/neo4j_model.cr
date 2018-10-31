@@ -50,7 +50,7 @@ module Neo4j
       return unless persisted?
 
       if (db_version = self.class.find(uuid))
-        set_attributes(from: db_version.node)
+        set_attributes(from node: db_version.node)
       end
     end
 
@@ -59,7 +59,12 @@ module Neo4j
       save
     end
 
-    def save
+    def update_columns(hash : Hash(String, PropertyType))
+      set_attributes(hash)
+      save(skip_callbacks: true)
+    end
+
+    def save(*, skip_callbacks = false) # FIXME: no callbacks to skip yet
       {% for var in @type.instance_vars.reject { |v| v.id =~ /^_/ } %}
         {% if var.type <= Array || (var.type.union? && var.type.union_types.includes?(Array)) %}
         if (old_value = @_node.properties["{{var}}"]?) != (new_value = @{{var}}.to_json)
@@ -90,8 +95,6 @@ module Neo4j
       @_changes.reject!(:created_at) # reject changes to created_at once set
 
       unless @_changes.empty?
-        puts @_changes.inspect
-
         if (t = @created_at) && !@_node.properties["created_at"]?
           @_changes[:created_at] = { old_value: nil, new_value: t.epoch }
         end
@@ -101,12 +104,12 @@ module Neo4j
 
         # values = @_changes.transform_values { |v| v[:new_value] } # why doesn't this work?
         values = Hash.zip(@_changes.keys, @_changes.values.map { |v| v[:new_value] })
-        values[:uuid] = @_uuid
 
         if persisted?
-          self.class.execute("MATCH (n:#{label}) WHERE (n.uuid = $uuid) SET " + @_changes.map { |prop, c| "n.`#{prop}` = $#{prop}" }.join(", "), values)
+          self.class.where(uuid: @_uuid).set(values)
         else
-          self.class.execute("CREATE (n) SET n.uuid = $uuid, " + @_changes.map { |prop, c| "n.`#{prop}` = $#{prop}" }.join(", ") + ", n:#{label}", values)
+          values[:uuid] = @_uuid
+          self.class.create(values)
         end
       end
 

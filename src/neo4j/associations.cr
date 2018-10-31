@@ -7,7 +7,7 @@ module Neo4j
       macro has_one(klass, *, rel_type, name = "", unique = true)
         \{% name = (name == "" ? klass.id.underscore : name) %}
         def \{{name.id}}
-          \{{klass.id}}.execute("MATCH (n:#{label})-[r:\{{rel_type.id}}]->(m:#{\{{klass.id}}.label}) RETURN m, r LIMIT 1").each_with_rel do |obj, rel|
+          \{{klass.id}}::QueryProxy.new("MATCH (n:#{label})-[r:\{{rel_type.id}}]->(m:#{\{{klass.id}}.label})", "RETURN m, r LIMIT 1").limit(1).each_with_rel do |obj, rel|
             obj._rel = rel ; return obj
           end
         end
@@ -17,7 +17,7 @@ module Neo4j
       macro has_many(klass, *, rel_type, name = "", unique = true)
         \{% name = (name == "" ? klass.id.underscore + 's' : name) %}
         def \{{name.id}}
-          \{{klass.id}}.execute("MATCH (n:#{label})-[r:\{{rel_type.id}}]->(m:#{\{{klass.id}}.label}) RETURN m, r LIMIT #{@@limit}")
+          \{{klass.id}}::QueryProxy.new("MATCH (n:#{label})-[r:\{{rel_type.id}}]->(m:#{\{{klass.id}}.label})", "RETURN m, r")
         end
       end
 
@@ -25,7 +25,7 @@ module Neo4j
       macro belongs_to(klass, *, rel_type, name = "", unique = true)
         \{% name = (name == "" ? klass.id.underscore : name) %}
         def \{{name.id}}
-          \{{klass.id}}.execute("MATCH (n:#{label})<-[r:\{{rel_type.id}}]-(m:#{\{{klass.id}}.label}) RETURN m, r LIMIT 1").each_with_rel do |obj, rel|
+          \{{klass.id}}::QueryProxy.new("MATCH (n:#{label})<-[r:\{{rel_type.id}}]-(m:#{\{{klass.id}}.label})", "RETURN m, r").each_with_rel do |obj, rel|
             obj._rel = rel ; return obj
           end
         end
@@ -35,7 +35,7 @@ module Neo4j
       macro belongs_to_many(klass, *, rel_type, name = "", unique = true)
         \{% name = (name == "" ? klass.id.underscore + 's' : name) %}
         def \{{name.id}}
-          \{{klass.id}}.execute("MATCH (n:#{label})<-[r:\{{rel_type.id}}]-(m:#{\{{klass.id}}.label}) RETURN m, r LIMIT #{@@limit}")
+          \{{klass.id}}::QueryProxy.new("MATCH (n:#{label})<-[r:\{{rel_type.id}}]-(m:#{\{{klass.id}}.label})", "RETURN m, r")
         end
       end
     end
