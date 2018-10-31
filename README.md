@@ -1,19 +1,21 @@
-# neo4j_model
+# neo4j_model.cr
 
-Current status: Very rough, do not use (yet?). Also note that I am very new to Crystal (coming over from Ruby).
+Current status: Feel free to try, but do not use in production. I am very new to Crystal (coming over from Ruby).
 
 The goal for now is to layer just enough property and association functionality on top of [neo4j.cr](https://github.com/jgaskins/neo4j.cr) so that I can build a simple PoC app that talks to an existing database.
 
 Implemented so far:
 
-* Map Crystal properties to Neo4J node properties
-* find, where (greatly simplified, exact attribute matches only)
+* map Crystal properties to Neo4j node properties
+* timestamps: sets created_at property on create and updated_at property on save (if present)
 * new, save, reload
-* sets created_at property on create and updated_at property on save (if present)
-* simple associations (has_one, has_many, belongs_to, belongs_to_many) - NOTE: read-only at present
+* find, where (greatly simplified, exact matches only), limit, order
+* for convenience: find_by, find_or_initialize_by, find_or_create_by
 * query proxy to allow method chaining (query is not executed until you try to access a record)
+* simple associations (has_one, has_many, belongs_to, belongs_to_many) - writable (all nodes must be persisted first)
+* before_save/after_save callbacks (more coming) - note: callbacks must return true to continue
 
-The association types do assume/impose a convention on the relationship direction, but I find it easier to think of relationships this way, rather than stick with Neo4j's required yet meaningless direction (the way ActiveNode does with the :in/:out parameter).
+The provided association types do assume/impose a convention on the relationship direction, but I find it easier to think of relationships this way, rather than stick with Neo4j's required yet meaningless direction (the way ActiveNode does with the :in/:out parameter).
 
 ## Installation
 
@@ -46,6 +48,8 @@ class Website
 
   belongs_to Server, rel_type: :HOSTS
 
+  before_save :generate_api_key
+
   property _internal : Bool # properties starting with _ will not be synchronized with database
 
   property name : String?
@@ -54,17 +58,17 @@ class Website
   property supports_http2 : Bool = false
   property nameservers : Array(String) = [] of String # defining it as an Array triggers the auto-serializer
   property some_hash : Hash(String, String)? # hashes ought to work too, but... not tested yet
-  property created_at : Time? = Time.utc_now
-  property updated_at : Time? = Time.utc_now
+  property created_at : Time? = Time.utc_now # will be set on create
+  property updated_at : Time? = Time.utc_now # will be set on update
 end
 ```
 
 ## TODO
 
-* make associations writable
 * make relationship properties writable (probably via custom rel class, similar to ActiveRel)
-* callbacks
+* more callbacks
 * validations
+* migrations (for constraints and indexes)
 * scopes
 
 ## Contributing

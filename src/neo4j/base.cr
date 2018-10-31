@@ -2,14 +2,18 @@ require "neo4j"
 
 module Neo4j
   module Model
-    def id
-      @_uuid
-    end
     def uuid
       @_uuid
     end
+    
     def rel
       @_rel
+    end
+
+    # id works differently from uuid because sometimes presence of id is used like #persisted?
+    # but in our case, for various reasons, we assign a uuid even before the node is created
+    def id
+      persisted? ? @_uuid : nil
     end
 
     def label
@@ -24,6 +28,7 @@ module Neo4j
       property _node : Neo4j::Node # snapshot of db node
       property _rel : Neo4j::Relationship?
 
+      # override if you want to use a different label
       class_getter label : String = "{{@type.name}}"
 
       def self.connection

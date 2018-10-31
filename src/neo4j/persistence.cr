@@ -33,6 +33,8 @@ module Neo4j
         {% else %}
           @{{var}} = node.properties["{{var}}"].as(typeof(@{{var}}))
         {% end %}
+      else
+        @{{var}} = nil
       end
       {% end %}
       true
@@ -50,7 +52,7 @@ module Neo4j
       return unless persisted?
 
       if (db_version = self.class.find(uuid))
-        set_attributes(from node: db_version.node)
+        set_attributes(from: db_version._node)
       end
     end
 
@@ -59,12 +61,25 @@ module Neo4j
       save
     end
 
+    def update_columns(**params)
+      hash = Hash(String, PropertyType).new
+      params.each { |k, v| hash[k.to_s] = v }
+      update_columns(hash)
+    end
+
     def update_columns(hash : Hash(String, PropertyType))
       set_attributes(hash)
       save(skip_callbacks: true)
     end
 
-    def save(*, skip_callbacks = false) # FIXME: no callbacks to skip yet
+    def save(*, skip_callbacks = false)
+      unless skip_callbacks
+        unless @@_before_save_callback.call(self)
+          puts "before_save callback failed!"
+          return false
+        end
+      end
+
       {% for var in @type.instance_vars.reject { |v| v.id =~ /^_/ } %}
         {% if var.type <= Array || (var.type.union? && var.type.union_types.includes?(Array)) %}
         if (old_value = @_node.properties["{{var}}"]?) != (new_value = @{{var}}.to_json)
@@ -106,16 +121,24 @@ module Neo4j
         values = Hash.zip(@_changes.keys, @_changes.values.map { |v| v[:new_value] })
 
         if persisted?
-          self.class.where(uuid: @_uuid).set(values)
+          self.class.where(uuid: @_uuid).set(values).execute
         else
           values[:uuid] = @_uuid
           self.class.create(values)
+          @_persisted = true
         end
       end
 
       # finally, update internal node representation
       @_changes.each { |prop, changeset| @_node.properties["#{prop}"] = changeset[:new_value] }
       @_changes.clear
+
+      unless skip_callbacks
+        unless @@_after_save_callback.call(self)
+          puts "after_save callback failed!"
+          return false
+        end
+      end
 
       true # FIXME
     end

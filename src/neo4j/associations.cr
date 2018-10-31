@@ -8,7 +8,7 @@ module Neo4j
         \{% name = (name == "" ? klass.id.underscore : name) %}
         def \{{name.id}}
           \{{klass.id}}::QueryProxy.new("MATCH (n:#{label})-[r:\{{rel_type.id}}]->(m:#{\{{klass.id}}.label})", "RETURN m, r LIMIT 1").limit(1).each_with_rel do |obj, rel|
-            obj._rel = rel ; return obj
+            obj._rel = rel ; obj
           end
         end
       end
@@ -26,7 +26,7 @@ module Neo4j
         \{% name = (name == "" ? klass.id.underscore : name) %}
         def \{{name.id}}
           \{{klass.id}}::QueryProxy.new("MATCH (n:#{label})<-[r:\{{rel_type.id}}]-(m:#{\{{klass.id}}.label})", "RETURN m, r").each_with_rel do |obj, rel|
-            obj._rel = rel ; return obj
+            obj._rel = rel ; obj
           end
         end
       end
