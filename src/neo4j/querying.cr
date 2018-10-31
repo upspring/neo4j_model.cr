@@ -32,10 +32,34 @@ module Neo4j
         property limit = 500 # relatively safe default value; adjust appropriately
         property ret # note: destroy uses this to DETACH DELETE instead of RETURN
 
+        # for associations
+        property add_proxy : QueryProxy?
+        property delete_proxy : QueryProxy?
+
         def initialize(@match = "MATCH (n:#{{{@type.id}}.label})", @ret = "RETURN n") # all other parameters are added by chaining methods
         end
         
         def initialize(@match, @create_merge, @ret) # all other parameters are added by chaining methods
+        end
+
+        def <<(obj : (String | {{@type.id}}))
+          raise "add_proxy undefined" unless @add_proxy
+
+          target_uuid = obj.is_a?(String) ? obj : obj.uuid
+
+          @add_proxy.reset_query
+          @add_proxy.cypher_params[:target_uuid] = target_uuid
+          @add_proxy.execute
+        end
+
+        def delete(obj : (String | {{@type.id}}))
+          raise "delete_proxy undefined" unless @delete_proxy
+
+          target_uuid = obj.is_a?(String) ? obj : obj.uuid
+
+          @delete_proxy.reset_query
+          @delete_proxy.cypher_params[:target_uuid] = target_uuid
+          @delete_proxy.execute
         end
 
         def clone_for_chain
@@ -101,6 +125,12 @@ module Neo4j
           @ret = orig_ret
 
           val
+        end
+
+        def reset_query
+          @cypher_query = nil
+          @cypher_params.clear
+          clone_for_chain # ?
         end
 
         def build_cypher_query
@@ -225,7 +255,7 @@ module Neo4j
 
           @_objects.size
         end
-      end
+      end # class QueryProxy
 
       def self.query_proxy
         QueryProxy

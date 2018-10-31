@@ -17,6 +17,8 @@ Implemented so far:
 
 The provided association types do assume/impose a convention on the relationship direction, but I find it easier to think of relationships this way, rather than stick with Neo4j's required yet meaningless direction (the way ActiveNode does with the :in/:out parameter).
 
+One major N.B. re: associations: Currently, assigning to has_one or belongs_to associations, the changes take place immediately (i.e. without saving). This will change in the future to require a save. There will also be a similar name_ids = [ id1, id2 ] to make it easier to incorporate the has_many and belongs_to_many associations into forms, and it will eventually work the same way (adding/removing relationships on save).
+
 ## Installation
 
 Add this to your application's `shard.yml`:
