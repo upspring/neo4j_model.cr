@@ -15,13 +15,17 @@ module Neo4j
       class QueryProxy
         include Enumerable(Array({{@type.id}}))
 
-        getter? executed : Bool = false
-        getter objects = Array({{@type.id}}).new
-        getter rels = Array(Neo4j::Relationship).new
+        @_executed : Bool = false
+        @_objects = Array({{@type.id}}).new
+        @_rels = Array(Neo4j::Relationship).new
 
+        # expose query building properties to make debugging easier
         property cypher_query : String?
+        property cypher_params = Hash(String, Neo4j::Type).new
+
         property match
         property wheres = Array(Tuple(String, ParamsHash)).new
+        property create_merge = ""
         property sets = Array(Tuple(String, ParamsHash)).new
         property order_bys = Array(Tuple((Symbol | String), SortDirection)).new
         property skip = 0
@@ -29,6 +33,19 @@ module Neo4j
         property ret # note: destroy uses this to DETACH DELETE instead of RETURN
 
         def initialize(@match = "MATCH (n:#{{{@type.id}}.label})", @ret = "RETURN n") # all other parameters are added by chaining methods
+        end
+        
+        def initialize(@match, @create_merge, @ret) # all other parameters are added by chaining methods
+        end
+
+        def clone_for_chain
+          # clone the query, not the results
+          new_query_proxy = self.class.new(@match, @create_merge, @ret)
+          \{% for var in [:wheres, :sets, :order_bys, :skip, :limit] %}
+            new_query_proxy.\{{var.id}} = @\{{var.id}}
+          \{% end %}
+
+          new_query_proxy
         end
 
         # NamedTuple does not have .each_with_object
@@ -40,93 +57,135 @@ module Neo4j
 
         def where(str : String, **params)
           @wheres << { str, sanitize_params_hash(params) }
-          self
+          clone_for_chain
         end
 
         def where(**params)
           @wheres << { "", sanitize_params_hash(params) }
-          self
+          clone_for_chain
         end
 
         def set(**params)
           @sets << { "", sanitize_params_hash(params) }
-          self
+          clone_for_chain
         end
 
         def set(params : ParamsHash)
           @sets << { "", sanitize_params_hash(params) }
-          self
+          clone_for_chain
         end
 
         def set_label(label : String)
           @sets << { "n:#{label}", ParamsHash.new }
-          self
+          clone_for_chain
         end
 
         # TODO: remove_label(label : String)
 
         def order(prop : Symbol, dir : SortDirection = Neo4j::Model::SortDirection::ASC)
           @order_bys << { prop, dir }
-          self
+          clone_for_chain
         end
 
         def skip(@skip)
-          self
+          clone_for_chain
         end
 
         def limit(@limit)
-          self
+          clone_for_chain
         end
 
-        def execute
-          cypher_params = Hash(String, Neo4j::Type).new
+        def count
+          orig_ret, @ret = @ret, "RETURN COUNT(*)"
+          val = execute_count
+          @ret = orig_ret
+
+          val
+        end
+
+        def build_cypher_query
           @cypher_query = String.build do |cypher_query|
             cypher_query << @match
 
             if wheres.any?
               cypher_query << " WHERE "
               wheres.each_with_index do |(str, params), index|
-                cypher_query << " #{str} " + params.keys.map { |k| "(n.`#{k}` = $#{k}_w#{index})" }.join(" AND ")
-                params.each { |k, v| cypher_params["#{k}_w#{index}"] = v }
+                if str == ""
+                  cypher_query << params.keys.map { |k| "(n.`#{k}` = $#{k}_w#{index})" }.join(" AND ")
+                  params.each { |k, v| @cypher_params["#{k}_w#{index}"] = v }
+                else
+                  cypher_query << "#{str}"
+                  params.each { |k, v| @cypher_params[k.to_s] = v }
+                end
               end
             end
+
+            cypher_query << " #{@create_merge}" unless @create_merge == ""
 
             if sets.any?
               cypher_query << " SET "
               sets.each_with_index do |(str, params), index|
                 cypher_query << ", " if index > 0
                 cypher_query << "#{str} " + params.keys.map { |k| "n.`#{k}` = $#{k}_s#{index}" }.join(", ")
-                params.each { |k, v| cypher_params["#{k}_s#{index}"] = v }
+                params.each { |k, v| @cypher_params["#{k}_s#{index}"] = v }
               end
             end
 
-            cypher_query << " #{@ret}"
-            cypher_query << "ORDER BY " + @order_bys.map { |(prop, dir)| "`#{prop}` #{dir.to_s}" }.join(", ") if @order_bys.any?
-            # cypher_query << " SKIP #{@skip} LIMIT #{@limit}"
+            cypher_query << " #{@ret}" unless @ret == ""
+
+            if @create_merge == "" && @ret !~ /delete/i
+              cypher_query << " ORDER BY " + @order_bys.map { |(prop, dir)| "`#{prop}` #{dir.to_s}" }.join(", ") if @order_bys.any?
+              cypher_query << " SKIP #{@skip} LIMIT #{@limit}"
+            end
           end
 
-          @objects = [] of {{@type.id}}
-          @rels = [] of Neo4j::Relationship
-          puts "#{Time.utc_now.to_s("%H:%M:%S")} neo4j_model | executing Cypher query: #{@cypher_query}"
-          puts "#{Time.utc_now.to_s("%H:%M:%S")} neo4j_model |   with params: #{cypher_params.inspect}"
-          {{@type.id}}.connection.execute(@cypher_query, cypher_params).each do |result|
+          puts "#{Time.utc_now.to_s("%H:%M:%S")} neo4j_model | Constructed Cypher query: #{@cypher_query}"
+          puts "#{Time.utc_now.to_s("%H:%M:%S")} neo4j_model |   with params: #{@cypher_params.inspect}"
+        end
+
+        def execute
+          build_cypher_query
+
+          @_objects = Array({{@type.id}}).new
+          @_rels = Array(Neo4j::Relationship).new
+          {{@type.id}}.connection.execute(@cypher_query, @cypher_params).each do |result|
             if (node = result[0]?)
-              @objects << {{@type.id}}.new(node.as(Neo4j::Node))
+              @_objects << {{@type.id}}.new(node.as(Neo4j::Node))
             end
             if (rel = result[1]?)
-              @rels << rel.as(Neo4j::Relationship)
+              @_rels << rel.as(Neo4j::Relationship)
             end
           end
 
-          @executed = true # FIXME - needs error checking
+          @_executed = true # FIXME - needs error checking
 
           self
+        end
+
+        def execute_count
+          build_cypher_query
+
+          count : Integer = 0
+
+          {{@type.id}}.connection.execute(@cypher_query, @cypher_params).each do |result|
+            if (val = result[0]?)
+              count = val.as(Integer)
+            else
+              raise "Error while reading value of COUNT"
+            end
+          end
+
+          count
+        end
+
+        def executed?
+          @_executed
         end
 
         def each
           execute unless executed?
 
-          @objects.each do |obj|
+          @_objects.each do |obj|
             yield obj
           end
         end
@@ -134,17 +193,17 @@ module Neo4j
         def each_with_rel
           execute unless executed?
 
-          return unless @rels.size == @objects.size
+          return unless @_rels.size == @_objects.size
 
-          @objects.each_with_index do |obj, index|
-            yield obj, @rels[index]
+          @_objects.each_with_index do |obj, index|
+            yield obj, @_rels[index]
           end
         end
 
         def first
           to_a.first
         end
-        
+
         def first?
           to_a.first?
         end
@@ -152,19 +211,19 @@ module Neo4j
         def to_a
           execute unless executed?
 
-          @objects
+          @_objects
         end
 
         def [](index)
           execute unless executed?
 
-          @objects[index]
+          @_objects[index]
         end
 
         def size
           execute unless executed?
 
-          @objects.size
+          @_objects.size
         end
       end
 
@@ -182,6 +241,10 @@ module Neo4j
 
       def self.first?
         QueryProxy.new.limit(1).first?
+      end
+
+      def self.count
+        QueryProxy.new.count
       end
 
       def self.where(**params)
@@ -204,21 +267,31 @@ module Neo4j
         where(**params).first?
       end
 
+      def self.find_or_initialize_by(**params)
+        find_by(**params) || new(**params)
+      end
+
+      def self.find_or_create_by(**params)
+        find_by(**params) || create(**params)
+      end
+
       def self.create(params : Hash)
-        QueryProxy.new("CREATE (n)").set(params).set_label(label).execute
+        QueryProxy.new("CREATE (n:#{label})").set(params).execute.first
       end
 
       def self.create(**params)
-        QueryProxy.new("CREATE (n)").set(**params).set_label(label).execute
+        QueryProxy.new("CREATE (n:#{label})").set(**params).execute.first
       end
 
       def self.destroy_all
         QueryProxy.new("MATCH (n:#{label})", "DETACH DELETE n").execute
+        true # FIXME: check for errors
       end
     end # macro included
 
     def destroy
       self.class.query_proxy.new("MATCH (n:#{label})", "DETACH DELETE n").where(uuid: uuid).execute
+      true # FIXME: check for errors
     end
   end
 end
