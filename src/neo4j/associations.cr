@@ -51,10 +51,9 @@ module Neo4j
 
       def {{name.id}}
         proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})-[r:{{rel_type.id}}]->(m:#{{{klass.id}}.label})", "RETURN m, r")
-        proxy.add_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: $target_uuid)",
-                                                       "MERGE (n)-[r:{{rel_type.id}}]->(m)", "RETURN r")
-        proxy.delete_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: $target_uuid'})",
-                                                          "MERGE (n)-[r:{{rel_type.id}}]->(m)", "RETURN r")
+        proxy.add_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: $target_uuid})",
+                                                       "MERGE (n)-[r:{{rel_type.id}}]->(m)", "RETURN m, r")
+        proxy.delete_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})-[r:{{rel_type.id}}]->(m:#{{{klass.id}}.label} {uuid: $target_uuid})", "DELETE r")
         proxy
       end
     end
@@ -109,7 +108,7 @@ module Neo4j
       def {{name.id}}
         proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label})<-[r:{{rel_type.id}}]-(m:#{{{klass.id}}.label})", "RETURN m, r")
         proxy.add_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: $target_uuid})",
-                                                       "MERGE (n)<-[r:{{rel_type.id}}]-(m)", "RETURN r")
+                                                       "MERGE (n)<-[r:{{rel_type.id}}]-(m)", "RETURN m, r")
         proxy.delete_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})<-[r:{{rel_type.id}}]-(m:#{{{klass.id}}.label} {uuid: $target_uuid})", "DELETE r")
         proxy
       end

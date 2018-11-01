@@ -43,23 +43,27 @@ module Neo4j
         end
 
         def <<(obj : (String | {{@type.id}}))
-          raise "add_proxy undefined" unless @add_proxy
+          if (proxy = @add_proxy)
+            target_uuid = obj.is_a?(String) ? obj : obj.uuid
 
-          target_uuid = obj.is_a?(String) ? obj : obj.uuid
-
-          @add_proxy.reset_query
-          @add_proxy.cypher_params[:target_uuid] = target_uuid
-          @add_proxy.execute
+            proxy.reset_query
+            proxy.cypher_params["target_uuid"] = target_uuid
+            proxy.execute
+          else
+            raise "add_proxy not set"
+          end
         end
 
         def delete(obj : (String | {{@type.id}}))
-          raise "delete_proxy undefined" unless @delete_proxy
+          if (proxy = @delete_proxy)
+            target_uuid = obj.is_a?(String) ? obj : obj.uuid
 
-          target_uuid = obj.is_a?(String) ? obj : obj.uuid
-
-          @delete_proxy.reset_query
-          @delete_proxy.cypher_params[:target_uuid] = target_uuid
-          @delete_proxy.execute
+            proxy.reset_query
+            proxy.cypher_params["target_uuid"] = target_uuid
+            proxy.execute
+          else
+            raise "delete_proxy not set"
+          end
         end
 
         def clone_for_chain
@@ -129,7 +133,7 @@ module Neo4j
 
         def reset_query
           @cypher_query = nil
-          @cypher_params.clear
+          @cypher_params.try(&.clear)
           clone_for_chain # ?
         end
 
