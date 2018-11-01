@@ -24,7 +24,7 @@ module Neo4j
         property cypher_params = Hash(String, Neo4j::Type).new
 
         property match
-        property wheres = Array(Tuple(String, ParamsHash)).new
+        property wheres = Array(Tuple(String, String, ParamsHash)).new
         property create_merge = ""
         property sets = Array(Tuple(String, ParamsHash)).new
         property order_bys = Array(Tuple((Symbol | String), SortDirection)).new
@@ -84,12 +84,20 @@ module Neo4j
         end
 
         def where(str : String, **params)
-          @wheres << { str, sanitize_params_hash(params) }
+          @wheres << { str, "", sanitize_params_hash(params) }
+          clone_for_chain
+        end
+        def where(**params)
+          @wheres << { "", "", sanitize_params_hash(params) }
           clone_for_chain
         end
 
-        def where(**params)
-          @wheres << { "", sanitize_params_hash(params) }
+        def where_not(str : String, **params)
+          @wheres << { str, "NOT", sanitize_params_hash(params) }
+          clone_for_chain
+        end
+        def where_not(**params)
+          @wheres << { "", "NOT", sanitize_params_hash(params) }
           clone_for_chain
         end
 
@@ -143,7 +151,9 @@ module Neo4j
 
             if wheres.any?
               cypher_query << " WHERE "
-              wheres.each_with_index do |(str, params), index|
+              wheres.each_with_index do |(str, not, params), index|
+                cypher_query << "NOT " if not != ""
+
                 if str == ""
                   cypher_query << params.map { |k, v| v ? "(n.`#{k}` = $#{k}_w#{index})" : "(n.`#{k}` IS NULL)" }.join(" AND ")
                   params.each { |k, v| @cypher_params["#{k}_w#{index}"] = v if v }
@@ -281,8 +291,18 @@ module Neo4j
         QueryProxy.new.count
       end
 
+      def self.where(str : String, **params)
+        QueryProxy.new.where(str, **params)
+      end
       def self.where(**params)
         QueryProxy.new.where(**params)
+      end
+
+      def self.where_not(str : String, **params)
+        QueryProxy.new.where_not(str, **params)
+      end
+      def self.where_not(**params)
+        QueryProxy.new.where_not(**params)
       end
 
       def self.find!(uuid : String?)
