@@ -7,6 +7,13 @@ module Neo4j
     alias Integer = Int8 | Int16 | Int32 | Int64
     alias PropertyType = Nil | Bool | String | Integer | Float64 | Array(PropertyType) | Hash(String, PropertyType)
 
+    # if you want to use timestamps, add something like this to your model class
+    # (make sure to initialize to a non-nil value, like Time.utc_now)
+    #   property created_at : Time? = Time.utc_now
+    #   property updated_at : Time? = Time.utc_now
+    @created_at : Time?
+    @updated_at : Time?
+
     alias Changeset = NamedTuple(old_value: Neo4j::Type, new_value: Neo4j::Type)
 
     macro included
