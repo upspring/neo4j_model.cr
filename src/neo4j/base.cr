@@ -1,4 +1,5 @@
 require "neo4j"
+require "uuid"
 
 module Neo4j
   module Model

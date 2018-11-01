@@ -5,13 +5,31 @@ module Neo4j
     # equivalent of ActiveNode has_one :out
     macro has_one(klass, *, rel_type, name = "", unique = true)
       {% name = (name == "" ? klass.id.underscore : name.id) %}
-      def {{name.id}}
-        ret = nil
-        {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})-[r:{{rel_type.id}}]->(m:#{{{klass.id}}.label})", "RETURN m, r LIMIT 1").limit(1).each_with_rel do |obj, rel|
-          obj._rel = rel ; obj
-          ret = obj
+
+      class QueryProxy
+        # QueryProxy instance method, for chaining
+        # FIXME: just adding 's' to pluralize is not always right
+        def {{name.id}}s : {{klass.id}}::QueryProxy
+          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})-[r:{{rel_type.id}}]->({{klass.id.underscore}}:#{{{klass.id}}.label})",
+                                               "RETURN {{klass.id.underscore}}, r")
+          self.chain proxy
         end
-        ret
+
+        # QueryProxy instance method, for normal use (returns object)
+        def {{name.id}} : {{klass.id}}?
+          {{name.id}}s.first_with_rel?
+        end
+      end
+
+      # FIXME: just adding 's' to pluralize is not always right
+      # instance method, to start a chained query
+      def {{name.id}}s
+        # create a proxy for all queries related to this association
+        proxy = QueryProxy.new.{{name.id}}s
+
+        # this is the beginning of the chain, should start with a uuid match (provided by #query_proxy)
+        context = query_proxy
+        proxy = context.chain proxy
       end
 
       def {{name.id}}=(target : {{klass.id}}?)
@@ -49,25 +67,63 @@ module Neo4j
     macro has_many(klass, *, rel_type, name = "", unique = true)
       {% name = (name == "" ? klass.id.underscore + 's' : name.id) %}
 
+      class QueryProxy
+        # QueryProxy instance method, for chaining
+        def {{name.id}} : {{klass.id}}::QueryProxy
+          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})-[r:{{rel_type.id}}]->({{klass.id.underscore}}:#{{{klass.id}}.label})",
+                                               "RETURN {{klass.id.underscore}}, r")
+          self.chain proxy
+        end
+      end
+
+      # instance method, either to start a chained query or to do regular operations (list, add/delete)
       def {{name.id}}
-        proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})-[r:{{rel_type.id}}]->(m:#{{{klass.id}}.label})", "RETURN m, r")
+        proxy = QueryProxy.new.{{name.id}}
+
+        # while we have the proper context (label & uuid), generate queries to add and remove relationships
         proxy.add_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: $target_uuid})",
-                                                       "MERGE (n)-[r:{{rel_type.id}}]->(m)", "RETURN m, r")
+                                                      "MERGE (n)-[r:{{rel_type.id}}]->(m)", "RETURN m, r")
         proxy.delete_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})-[r:{{rel_type.id}}]->(m:#{{{klass.id}}.label} {uuid: $target_uuid})", "DELETE r")
-        proxy
+
+        # this is the beginning of the chain, should start with a uuid match (provided by #query_proxy)
+        context = query_proxy
+        proxy = context.chain proxy
       end
     end
 
     # equivalent of ActiveNode has_one :in
     macro belongs_to(klass, *, rel_type, name = "", unique = true)
       {% name = (name == "" ? klass.id.underscore : name.id) %}
-      def {{name.id}}
-        ret = nil
-        {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})<-[r:{{rel_type.id}}]-(m:#{{{klass.id}}.label})", "RETURN m, r").each_with_rel do |obj, rel|
-          obj._rel = rel
-          ret = obj
+
+      class QueryProxy
+        # QueryProxy instance method, for chaining
+        # FIXME: just adding 's' to pluralize is not always right
+        def {{name.id}}s : {{klass.id}}::QueryProxy
+          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})<-[r:{{rel_type.id}}]-({{klass.id.underscore}}:#{{{klass.id}}.label})",
+                                               "RETURN {{klass.id.underscore}}, r")
+          self.chain proxy
         end
-        ret
+
+        # QueryProxy instance method, for normal use (returns object)
+        def {{name.id}} : {{klass.id}}?
+          {{name.id}}s.first_with_rel?
+        end
+      end
+
+      # FIXME: just adding 's' to pluralize is not always right
+      # instance method, to start a chained query
+      def {{name.id}}s
+        # create a proxy for all queries related to this association
+        proxy = QueryProxy.new.{{name.id}}s
+
+        # this is the beginning of the chain, should start with a uuid match (provided by #query_proxy)
+        context = query_proxy
+        proxy = context.chain proxy
+      end
+
+      # instance method, for normal use (returns object)
+      def {{name.id}}
+        {{name.id}}s.first_with_rel?
       end
 
       def {{name.id}}=(target : {{klass.id}}?)
@@ -103,14 +159,28 @@ module Neo4j
     # equivalent of ActiveNode has_many :in
     macro belongs_to_many(klass, *, rel_type, name = "", unique = true)
       {% name = (name == "" ? klass.id.underscore + 's' : name.id) %}
-      {% classified_name = name.split("_").map(&.capitalize).join("").id %}
 
+      class QueryProxy
+        # QueryProxy instance method, for chaining
+        def {{name.id}} : {{klass.id}}::QueryProxy
+          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})<-[r:{{rel_type.id}}]-({{klass.id.underscore}}:#{{{klass.id}}.label})",
+                                               "RETURN {{klass.id.underscore}}, r")
+          self.chain proxy
+        end
+      end
+
+      # instance method, either to start a chained query or to do regular operations (list, add/delete)
       def {{name.id}}
-        proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label})<-[r:{{rel_type.id}}]-(m:#{{{klass.id}}.label})", "RETURN m, r")
+        proxy = QueryProxy.new.{{name.id}}
+
+        # while we have the proper context (label & uuid), generate queries to add and remove relationships
         proxy.add_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: $target_uuid})",
-                                                       "MERGE (n)<-[r:{{rel_type.id}}]-(m)", "RETURN m, r")
-        proxy.delete_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})<-[r:{{rel_type.id}}]-(m:#{{{klass.id}}.label} {uuid: $target_uuid})", "DELETE r")
-        proxy
+                                                      "MERGE (n)-[r:{{rel_type.id}}]->(m)", "RETURN m, r")
+        proxy.delete_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})-[r:{{rel_type.id}}]->(m:#{{{klass.id}}.label} {uuid: $target_uuid})", "DELETE r")
+
+        # this is the beginning of the chain, should start with a uuid match (provided by #query_proxy)
+        context = query_proxy
+        proxy = context.chain proxy
       end
     end
   end

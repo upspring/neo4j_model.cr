@@ -2,7 +2,7 @@
 
 Current status: Give it a try! Just don't use in production. There's no test suite yet and I am very new to Crystal (coming over from Ruby).
 
-The goal for now is to layer just enough property and association functionality on top of [neo4j.cr](https://github.com/jgaskins/neo4j.cr) so that I can build a simple PoC app that talks to an existing database.
+The goal for now is to layer just enough property and association functionality on top of [neo4j.cr](https://github.com/jgaskins/neo4j.cr) so that I can build a simple PoC app that talks to an existing database. Inspired by ActiveNode/[Neo4j.rb](https://github.com/neo4jrb/neo4j) (although I haven't yet figured out how to implement their killer query builder that can dive down through layers of associations).
 
 Implemented so far:
 
@@ -75,11 +75,17 @@ class Website
 end
 ```
 
-Including Neo4j::Model creates an embedded QueryProxy class that you can call directly as needed to do unusual matches/returns. For example, if Members are nested under both Organization and User and you need to check both:
+Including Neo4j::Model creates an embedded QueryProxy class that you can call directly as needed to run queries not yet supported by the query builder. For example, if Members are nested under both Organization and User and you need to check both, you could do this:
 
 ```crystal
 proxy = Member::QueryProxy.new("MATCH (o:Organization)-->(m:Member), (u:User)-->(m:Member)", "RETURN m")
-proxy.where("o.uuid = $o_uuid AND u.uuid = $u_uuid", o_uuid: org.uuid, u_uuid: user.uuid).limit(1).first?
+member = proxy.where("o.uuid = $o_uuid AND u.uuid = $u_uuid", o_uuid: org.uuid, u_uuid: user.uuid).limit(1).first?
+```
+
+However, now that we have some basic association chaining in place, you can also do it this way, which is slightly clearer:
+
+```crystal
+member = org.members.users.where(uuid: user.uuid).return(member: :member)
 ```
 
 ## TODO
