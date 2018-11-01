@@ -145,8 +145,8 @@ module Neo4j
               cypher_query << " WHERE "
               wheres.each_with_index do |(str, params), index|
                 if str == ""
-                  cypher_query << params.keys.map { |k| "(n.`#{k}` = $#{k}_w#{index})" }.join(" AND ")
-                  params.each { |k, v| @cypher_params["#{k}_w#{index}"] = v }
+                  cypher_query << params.map { |k, v| v ? "(n.`#{k}` = $#{k}_w#{index})" : "(n.`#{k}` IS NULL)" }.join(" AND ")
+                  params.each { |k, v| @cypher_params["#{k}_w#{index}"] = v if v }
                 else
                   cypher_query << "#{str}"
                   params.each { |k, v| @cypher_params[k.to_s] = v }
@@ -160,8 +160,8 @@ module Neo4j
               cypher_query << " SET "
               sets.each_with_index do |(str, params), index|
                 cypher_query << ", " if index > 0
-                cypher_query << "#{str} " + params.keys.map { |k| "n.`#{k}` = $#{k}_s#{index}" }.join(", ")
-                params.each { |k, v| @cypher_params["#{k}_s#{index}"] = v }
+                cypher_query << "#{str} " + params.map { |k, v| v ? "n.`#{k}` = $#{k}_s#{index}" : "n.`#{k}` = NULL" }.join(", ")
+                params.each { |k, v| @cypher_params["#{k}_s#{index}"] = v if v }
               end
             end
 
