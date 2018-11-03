@@ -98,11 +98,12 @@ module Neo4j
       params.each do |prop, dir|
         case dir.to_s.downcase
         when "desc"
-          order(prop, SortDirection::DESC)
+          @order_bys << { prop, SortDirection::DESC }
         else
-          order(prop, SortDirection::ASC)
+          @order_bys << { prop, SortDirection::ASC }
         end
       end
+      clone_for_chain
     end
 
     def skip(@skip)
@@ -243,7 +244,7 @@ module Neo4j
             cypher_query << " #{@ret}" unless @ret == ""
     
             if @create_merge == "" && @ret !~ /delete/i
-              cypher_query << " ORDER BY " + @order_bys.map { |(prop, dir)| "`#{prop}` #{dir.to_s}" }.join(", ") if @order_bys.any?
+              cypher_query << " ORDER BY " + @order_bys.map { |(prop, dir)| "#{prop} #{dir.to_s}" }.join(", ") if @order_bys.any?
               cypher_query << " SKIP #{@skip} LIMIT #{@limit}"
             end
           end
@@ -362,6 +363,10 @@ module Neo4j
           execute unless executed?
 
           @_objects.size
+        end
+
+        def empty?
+          size == 0
         end
       end # QueryProxy subclass
 
