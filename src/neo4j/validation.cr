@@ -21,7 +21,23 @@ module Neo4j
       @_errors
     end
 
-    def valid?
+    def valid?(*, skip_callbacks = false)
+      unless skip_callbacks
+        unless @@_before_validation_callback.call(self)
+          puts "before_validation callback failed!"
+          return false
+        end
+      end
+
+      # TODO: do some stuff here
+
+      unless skip_callbacks
+        unless @@_after_validation_callback.call(self)
+          puts "after_validation callback failed!"
+          return false
+        end
+      end
+
       true # we don't support validations yet, so... it's not *wrong*...
     end
   end

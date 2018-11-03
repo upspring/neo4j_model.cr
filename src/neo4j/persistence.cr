@@ -80,6 +80,8 @@ module Neo4j
     end
 
     def save(*, skip_callbacks = false)
+      return unless valid?(skip_callbacks: skip_callbacks)
+
       unless skip_callbacks
         unless @@_before_save_callback.call(self)
           puts "before_save callback failed!"
