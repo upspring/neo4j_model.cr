@@ -87,9 +87,22 @@ module Neo4j
       clone_for_chain
     end
 
+    # this form is mainly for internal use (below), but use it if you need it
     def order(prop : Symbol, dir : SortDirection = Neo4j::Model::SortDirection::ASC)
       @order_bys << { prop, dir }
       clone_for_chain
+    end
+
+    # ex: .order(name: :ASC, created_by: :desc)
+    def order(**params)
+      params.each do |prop, dir|
+        case dir.to_s.downcase
+        when "desc"
+          order(prop, SortDirection::DESC)
+        else
+          order(prop, SortDirection::ASC)
+        end
+      end
     end
 
     def skip(@skip)
