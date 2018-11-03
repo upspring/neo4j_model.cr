@@ -24,7 +24,7 @@ module Neo4j
     property order_bys = Array(Tuple((Symbol | String), SortDirection)).new
     property skip = 0
     property limit = 500 # relatively safe default value; adjust appropriately
-    property ret # note: destroy uses this to DETACH DELETE instead of RETURN
+    property ret = "" # note: destroy uses this to DETACH DELETE instead of RETURN
 
     # for associations
     property add_proxy : QueryProxy?
@@ -144,7 +144,7 @@ module Neo4j
         end
 
         def <<(obj : (String | {{@type.id}}))
-          if (proxy = @add_proxy)
+          if (proxy = @add_proxy.as({{@type.id}}::QueryProxy))
             target_uuid = obj.is_a?(String) ? obj : obj.uuid
 
             proxy.reset_query
@@ -156,7 +156,7 @@ module Neo4j
         end
 
         def delete(obj : (String | {{@type.id}}))
-          if (proxy = @delete_proxy)
+          if (proxy = @delete_proxy.as({{@type.id}}::QueryProxy))
             target_uuid = obj.is_a?(String) ? obj : obj.uuid
 
             proxy.reset_query

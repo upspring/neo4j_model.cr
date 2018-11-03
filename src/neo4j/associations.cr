@@ -82,7 +82,7 @@ module Neo4j
 
         # while we have the proper context (label & uuid), generate queries to add and remove relationships
         proxy.add_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: $target_uuid})",
-                                                      "MERGE (n)-[r:{{rel_type.id}}]->(m)", "RETURN m, r")
+                                                       "MERGE (n)-[r:{{rel_type.id}}]->(m)", "RETURN m, r")
         proxy.delete_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})-[r:{{rel_type.id}}]->(m:#{{{klass.id}}.label} {uuid: $target_uuid})", "DELETE r")
 
         # this is the beginning of the chain, should start with a uuid match (provided by #query_proxy)
@@ -148,7 +148,7 @@ module Neo4j
 
         ret = nil
         {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: '#{target_uuid}'})",
-                                      "MERGE (n)<-[r:{{rel_type.id}}]-(m)", "RETURN m, r").each_with_rel do |obj, rel|
+                                     "MERGE (n)<-[r:{{rel_type.id}}]-(m)", "RETURN m, r").each_with_rel do |obj, rel|
           obj._rel = rel
           ret = obj
         end
@@ -175,7 +175,7 @@ module Neo4j
 
         # while we have the proper context (label & uuid), generate queries to add and remove relationships
         proxy.add_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: $target_uuid})",
-                                                      "MERGE (n)-[r:{{rel_type.id}}]->(m)", "RETURN m, r")
+                                                       "MERGE (n)-[r:{{rel_type.id}}]->(m)", "RETURN m, r")
         proxy.delete_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})-[r:{{rel_type.id}}]->(m:#{{{klass.id}}.label} {uuid: $target_uuid})", "DELETE r")
 
         # this is the beginning of the chain, should start with a uuid match (provided by #query_proxy)
