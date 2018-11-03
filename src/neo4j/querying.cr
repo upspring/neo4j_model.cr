@@ -283,6 +283,17 @@ module Neo4j
           val
         end
 
+        def delete_all
+          @ret = "DETACH DELETE {{@type.id.underscore}}"
+          execute
+          true # FIXME: check for errors
+        end
+
+        # FIXME: this version should run callbacks
+        def destroy_all
+          delete_all
+        end
+
         def each
           execute unless executed?
 
@@ -415,9 +426,14 @@ module Neo4j
         QueryProxy.new("CREATE ({{@type.id.underscore}}:#{label})").set(**params).execute.first
       end
 
+      def self.delete_all
+        QueryProxy.new.delete_all
+      end
+        
+
+      # FIXME: this version should run callbacks
       def self.destroy_all
-        QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})", "DETACH DELETE n").execute
-        true # FIXME: check for errors
+        QueryProxy.new.destroy_all
       end
 
       def destroy
