@@ -49,9 +49,57 @@ module Neo4j
 
     def set_attributes(hash : Hash(String, PropertyType))
       {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
-      if hash.has_key?("{{var}}")
-        @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
-      end
+        if hash.has_key?("{{var}}")
+          if hash["{{var}}"].nil?
+            @{{var}} = nil
+          else
+            {% if var.type <= Bool || (var.type.union? && var.type.union_types.includes?(Bool)) %}
+              if (val = hash["{{var}}"]?)
+                if val.is_a?(Bool)
+                  @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+                else
+                  # FIXME: interpret string or integer values?
+                end
+              end
+            {% elsif var.type <= Integer || (var.type.union? && (var.type.union_types.includes?(Int8) || var.type.union_types.includes?(Int16) || var.type.union_types.includes?(Int32) || var.type.union_types.includes?(Int64))) %}
+              if (val = hash["{{var}}"]?)
+                if val.is_a?(Int)
+                  @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+                else
+                  # FIXME: interpret string values?
+                end
+              end
+            {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
+              if (val = hash["{{var}}"]?)
+                if val.is_a?(Time)
+                  @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+                else
+                  # FIXME: interpret string or integer values
+                end
+              end
+            {% elsif var.type <= Array || (var.type.union? && var.type.union_types.includes?(Array)) %}
+              if (val = hash["{{var}}"]?)
+                if val.is_a?(Array)
+                  @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+                else
+                  # FIXME: interpret string values?
+                end
+              end
+            {% elsif var.type <= Hash || (var.type.union? && var.type.union_types.includes?(Hash)) %}
+              if (val = hash["{{var}}"]?)
+                if val.is_a?(Hash)
+                  @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+                else
+                  # FIXME: interpret string values?
+                end
+              end
+            {% elsif var.type <= String || (var.type.union? && var.type.union_types.includes?(String)) %}
+              if hash.has_key?("{{var}}")
+                @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+              end
+            {% end %}
+          end
+        end
       {% end %}
     end
 
