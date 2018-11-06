@@ -106,6 +106,15 @@ module Neo4j
       clone_for_chain
     end
 
+    def unorder
+      @order_bys.clear
+    end
+
+    def reorder(**params)
+      unorder
+      order(**params)
+    end
+
     def skip(@skip)
       clone_for_chain
     end
@@ -450,7 +459,11 @@ module Neo4j
       def self.delete_all
         QueryProxy.new.delete_all
       end
-        
+
+      def self.clear
+        delete_all
+      end
+
 
       # FIXME: this version should run callbacks
       def self.destroy_all
