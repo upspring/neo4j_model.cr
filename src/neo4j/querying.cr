@@ -213,7 +213,6 @@ module Neo4j
             end
             cypher_query << ")"
           end
-          puts "Expanded where: #{expanded_str}"
 
           { expanded_str, new_params }
         end
@@ -374,6 +373,10 @@ module Neo4j
         QueryProxy
       end
 
+      def self.new_create_proxy
+        QueryProxy.new("CREATE ({{@type.id.underscore}}:#{label})")
+      end
+
       # query proxy that returns this instance (used as a base for association queries)
       def query_proxy : QueryProxy
         @_query_proxy ||= QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label} {uuid: '#{uuid}'})", "RETURN {{@type.id.underscore}}")
@@ -437,11 +440,11 @@ module Neo4j
       end
 
       def self.create(params : Hash)
-        QueryProxy.new("CREATE ({{@type.id.underscore}}:#{label})").set(params).execute.first
+        new(params).save
       end
 
       def self.create(**params)
-        QueryProxy.new("CREATE ({{@type.id.underscore}}:#{label})").set(**params).execute.first
+        new(**params).save
       end
 
       def self.delete_all
