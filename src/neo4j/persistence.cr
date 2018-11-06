@@ -133,7 +133,8 @@ module Neo4j
           self.class.where(uuid: @_uuid).set(values).execute
         else
           values[:uuid] = @_uuid
-          self.class.create(values)
+          db_version = self.class.new_create_proxy.set(values).execute.first
+          set_attributes(from: db_version._node)
           @_persisted = true
         end
       end
