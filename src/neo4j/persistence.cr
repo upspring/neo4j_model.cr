@@ -36,7 +36,7 @@ module Neo4j
         {% elsif var.type <= Hash || (var.type.union? && var.type.union_types.includes?(Hash)) %}
           @{{var}} = JSON.parse(node.properties["{{var}}"].as(String)).as_h.map { |_k, v| v.as_s }
         {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
-          @{{var}} = Time.epoch(node.properties["{{var}}"].as(Int))
+          @{{var}} = Time.unix(node.properties["{{var}}"].as(Int))
         {% else %}
           @{{var}} = node.properties["{{var}}"].as(typeof(@{{var}}))
         {% end %}
@@ -150,7 +150,7 @@ module Neo4j
         end
         {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
         if (local_var = @{{var}}) # remember, this type of guard doesn't work with instance vars, need to snapshot to local var
-          if (old_value = @_node.properties["{{var}}"]?) != (new_value = local_var.epoch)
+          if (old_value = @_node.properties["{{var}}"]?) != (new_value = local_var.to_unix)
             @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
           end
         elsif (old_value = @_node.properties["{{var}}"]?) != (new_value = nil)
@@ -168,10 +168,10 @@ module Neo4j
 
       unless @_changes.empty?
         if (t = @created_at) && !@_node.properties["created_at"]?
-          @_changes[:created_at] = { old_value: nil, new_value: t.epoch }
+          @_changes[:created_at] = { old_value: nil, new_value: t.to_unix }
         end
         if (t = @updated_at)
-          @_changes[:updated_at] = { old_value: t.epoch, new_value: (@updated_at = Time.utc_now).epoch }
+          @_changes[:updated_at] = { old_value: t.to_unix, new_value: (@updated_at = Time.utc_now).to_unix }
         end
 
         # values = @_changes.transform_values { |v| v[:new_value] } # why doesn't this work?

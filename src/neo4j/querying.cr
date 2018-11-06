@@ -333,6 +333,18 @@ module Neo4j
             yield obj, @_rels[index]
           end
         end
+  
+        def find!(uuid : String?)
+          raise "find! called with nil uuid param" unless uuid
+  
+          where(uuid: uuid).first
+        end
+
+        def find(uuid : String?)
+          return nil unless uuid
+  
+          where(uuid: uuid).first?
+        end
 
         def first : {{@type.id}}
           (executed? ? to_a : limit(1).to_a).first

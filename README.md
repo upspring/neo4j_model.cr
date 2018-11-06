@@ -1,5 +1,8 @@
 # neo4j_model.cr
 
+[![Version](https://img.shields.io/github/tag/upspring/neo4j_model.cr.svg?maxAge=360)](https://github.com/upspring/neo4j_model.cr/releases/latest)
+[![License](https://img.shields.io/github/license/upspring/neo4j_model.cr.svg)](https://github.com/upspring/neo4j_model.cr/blob/master/LICENSE)
+
 Current status: Give it a try! Just don't use in production. There's no test suite yet and I am very new to Crystal (coming over from Ruby).
 
 The goal for now is to layer just enough property and association functionality on top of [neo4j.cr](https://github.com/jgaskins/neo4j.cr) so that I can build a simple PoC app that talks to an existing database. Inspired by ActiveNode/[Neo4j.rb](https://github.com/neo4jrb/neo4j) (although I haven't yet figured out how to implement their killer query builder that can dive down through layers of associations).
