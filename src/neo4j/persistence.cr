@@ -165,6 +165,7 @@ module Neo4j
 
       # then persist changeset to database
       @_changes.reject!(:created_at) # reject changes to created_at once set
+      @_changes.reject!(:updated_at) if skip_callbacks # reject changes to updated_at when called via update_columns
 
       unless @_changes.empty?
         if (t = @created_at) && !@_node.properties["created_at"]?
