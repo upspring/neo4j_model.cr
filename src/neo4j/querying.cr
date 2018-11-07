@@ -87,9 +87,17 @@ module Neo4j
       clone_for_chain
     end
 
-    # this form is mainly for internal use (below), but use it if you need it
-    def order(prop : Symbol, dir : SortDirection = Neo4j::Model::SortDirection::ASC)
-      @order_bys << { prop, dir }
+    # this form is mainly for internal use, but use it if you need it
+    def order(prop : Symbol, dir : SortDirection = Neo4j::QueryProxy::SortDirection::ASC)
+      @order_bys << expand_order_by(prop, dir)
+      clone_for_chain
+    end
+
+    # ex: .order(:name, :created_by)
+    def order(*params)
+      params.each do |prop|
+        @order_bys << expand_order_by(prop, SortDirection::ASC)
+      end
       clone_for_chain
     end
 
@@ -98,9 +106,9 @@ module Neo4j
       params.each do |prop, dir|
         case dir.to_s.downcase
         when "desc"
-          @order_bys << { prop, SortDirection::DESC }
+          @order_bys << expand_order_by(prop, SortDirection::DESC)
         else
-          @order_bys << { prop, SortDirection::ASC }
+          @order_bys << expand_order_by(prop, SortDirection::ASC)
         end
       end
       clone_for_chain
@@ -224,6 +232,10 @@ module Neo4j
           end
 
           { expanded_str, new_params }
+        end
+
+        def expand_order_by(prop : Symbol, dir : SortDirection)
+          { "{{@type.id.underscore}}.`#{prop}`", dir }
         end
     
         def build_cypher_query
