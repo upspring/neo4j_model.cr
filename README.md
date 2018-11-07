@@ -3,9 +3,9 @@
 [![Version](https://img.shields.io/github/tag/upspring/neo4j_model.cr.svg?maxAge=360)](https://github.com/upspring/neo4j_model.cr/releases/latest)
 [![License](https://img.shields.io/github/license/upspring/neo4j_model.cr.svg)](https://github.com/upspring/neo4j_model.cr/blob/master/LICENSE)
 
-Current status: Give it a try! Just don't use in production. There's no test suite yet and I am very new to Crystal (coming over from Ruby).
+Current status: Moving fast and breaking things. Give it a try! Just don't use in production. There's no test suite yet and I am new to Crystal (coming from Ruby).
 
-The goal for now is to layer just enough property and association functionality on top of [neo4j.cr](https://github.com/jgaskins/neo4j.cr) so that I can build a simple PoC app that talks to an existing database. Inspired by ActiveNode/[Neo4j.rb](https://github.com/neo4jrb/neo4j) (although I haven't yet figured out how to implement their killer query builder that can dive down through layers of associations).
+The goal for now is to layer just enough property and association functionality on top of [neo4j.cr](https://github.com/jgaskins/neo4j.cr) so that I can build a simple PoC app that talks to an existing database. Inspired by ActiveNode/[Neo4j.rb](https://github.com/neo4jrb/neo4j).
 
 Implemented so far:
 
@@ -20,8 +20,6 @@ Implemented so far:
 * scopes a la ActiveRecord
 
 The provided association types do assume/impose a convention on the relationship direction, but I find it easier to think of relationships this way, rather than stick with Neo4j's required yet meaningless direction (the way ActiveNode does with the :in/:out parameter).
-
-One major N.B. re: associations: Currently, assigning to has_one or belongs_to associations, the changes take place immediately (i.e. without saving). This MAY CHANGE in the future to require a save. There will also be a similar name_ids = [ id1, id2 ] to make it easier to incorporate the has_many and belongs_to_many associations into forms.
 
 ## Installation
 
@@ -95,6 +93,7 @@ member = org.members.users.where(uuid: user.uuid).return(member: :member)
 
 * specs!
 * expand #where to accept arrays and ranges
+* update_all
 * make relationship properties writable (probably via custom rel class, similar to ActiveRel)
 * more callbacks
 * migrations (for constraints and indexes)

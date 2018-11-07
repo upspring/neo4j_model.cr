@@ -31,10 +31,10 @@ module Neo4j
     def set_attributes(from node : Neo4j::Node)
       {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
       if node.properties.has_key?("{{var}}")
-        {% if var.type <= Array || (var.type.union? && var.type.union_types.includes?(Array)) %}
-          @{{var}} = JSON.parse(node.properties["{{var}}"].as(String)).as_a.map(&.as_s)
-        {% elsif var.type <= Hash || (var.type.union? && var.type.union_types.includes?(Hash)) %}
-          @{{var}} = JSON.parse(node.properties["{{var}}"].as(String)).as_h.map { |_k, v| v.as_s }
+        {% if var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
+          @{{var}} = JSON.parse(node.properties["{{var}}"].as(String)).as_a?.try &.map(&.as_s)
+        {% elsif var.type <= Hash(String, String) || (var.type.union? && var.type.union_types.includes?(Hash(String, String))) %}
+          @{{var}} = JSON.parse(node.properties["{{var}}"].as(String)).as_h?.try &.map { |_k, v| v.as_s }
         {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
           @{{var}} = Time.unix(node.properties["{{var}}"].as(Int))
         {% else %}
@@ -44,6 +44,7 @@ module Neo4j
         @{{var}} = nil
       end
       {% end %}
+
       true
     end
 
@@ -77,7 +78,7 @@ module Neo4j
                   # FIXME: interpret string or integer values
                 end
               end
-            {% elsif var.type <= Array || (var.type.union? && var.type.union_types.includes?(Array)) %}
+            {% elsif var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
               if (val = hash["{{var}}"]?)
                 if val.is_a?(Array)
                   @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
@@ -85,7 +86,7 @@ module Neo4j
                   # FIXME: interpret string values?
                 end
               end
-            {% elsif var.type <= Hash || (var.type.union? && var.type.union_types.includes?(Hash)) %}
+            {% elsif var.type <= Hash(String, String) || (var.type.union? && var.type.union_types.includes?(Hash(String, String))) %}
               if (val = hash["{{var}}"]?)
                 if val.is_a?(Hash)
                   @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
@@ -137,7 +138,7 @@ module Neo4j
         end
       end
 
-      {% for var in @type.instance_vars.reject { |v| v.id =~ /^_/ } %}
+      {% for var in @type.instance_vars.reject { |v| v.id =~ /^_/ || v.id =~ /_ids?$/ } %}
         {% if var.type <= Array || (var.type.union? && var.type.union_types.includes?(Array)) %}
         if (old_value = @_node.properties["{{var}}"]?) != (new_value = @{{var}}.to_json)
           @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
@@ -182,13 +183,34 @@ module Neo4j
           self.class.where(uuid: @_uuid).set(values).execute
         else
           values[:uuid] = @_uuid
-          db_version = self.class.new_create_proxy.set(values).execute.first
-          set_attributes(from: db_version._node)
+          self.class.new_create_proxy.set(values).execute.first
           @_persisted = true
         end
       end
 
-      # finally, update internal node representation
+      @_changes.each { |prop, changeset| @_node.properties["#{prop}"] = changeset[:new_value] }
+      @_changes.clear
+
+      # look for changes to associations and persist as needed
+      {% for var in @type.instance_vars.select { |v| v.id =~ /_ids?$/ } %}
+      {% if var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
+          if (old_value = @_node.properties["{{var}}"]?) != (new_value = @{{var}}.to_json)
+            @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
+            persist_{{var}}
+          end
+        {% else %}
+          if (old_value = @_node.properties["{{var}}"]?) != (new_value = @{{var}})
+            @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
+            persist_{{var}}
+          end
+        {% end %}
+      {% end %}
+
+      unless @_changes.empty?
+        values = Hash.zip(@_changes.keys, @_changes.values.map { |v| v[:new_value] })
+        self.class.where(uuid: @_uuid).set(values).execute
+      end
+
       @_changes.each { |prop, changeset| @_node.properties["#{prop}"] = changeset[:new_value] }
       @_changes.clear
 
