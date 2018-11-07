@@ -32,6 +32,11 @@ module Neo4j
         proxy = context.chain proxy
       end
 
+      # instance method, for normal use (returns object)
+      def {{name.id}}
+        {{name.id}}s.first_with_rel?
+      end
+
       def {{name.id}}=(target : {{klass.id}}?)
         if target
           {{name.id}}_id = target.uuid
