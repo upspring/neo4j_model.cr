@@ -285,12 +285,13 @@ module Neo4j
 
           @_objects = Array({{@type.id}}).new
           @_rels = Array(Neo4j::Relationship).new
-          {{@type.id}}.connection.execute(@cypher_query, @cypher_params).each do |result|
-            if (node = result[0]?)
+
+          result.each do |data|
+            if (node = data[0]?)
               obj = {{@type.id}}.new(node.as(Neo4j::Node))
               @_objects << obj
             end
-            if (rel = result[1]?)
+            if (rel = data[1]?)
               @_rels << rel.as(Neo4j::Relationship)
             end
           end
@@ -455,6 +456,14 @@ module Neo4j
         QueryProxy.new.where_not(**params)
       end
 
+      def self.order(*params)
+        QueryProxy.new.order(*params)
+      end
+  
+      def self.order(**params)
+        QueryProxy.new.order(**params)
+      end
+  
       def self.find!(uuid : String?)
         raise "find! called with nil uuid param" unless uuid
 
