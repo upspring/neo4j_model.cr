@@ -271,8 +271,8 @@ module Neo4j
             end
           end
 
-          puts "#{Time.utc_now.to_s("%H:%M:%S")} neo4j_model | Constructed Cypher query: #{@cypher_query}"
-          puts "#{Time.utc_now.to_s("%H:%M:%S")} neo4j_model |   with params: #{@cypher_params.inspect}"
+          Neo4jModel.settings.logger.info "Constructed Cypher query: #{@cypher_query}"
+          Neo4jModel.settings.logger.info "  with params: #{@cypher_params.inspect}"
         end
 
         def execute

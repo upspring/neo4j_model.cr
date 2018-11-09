@@ -173,8 +173,6 @@ module Neo4j
         if (target_uuid = {{name.id}}_id)
           {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: '#{target_uuid}'})",
                                        "MERGE (n)<-[r:{{rel_type.id}}]-(m)", "RETURN n").execute
-        else
-          puts "{{name.id}}_id was nil"
         end
       end
     end

@@ -35,7 +35,11 @@ dependencies:
 
 ```crystal
 require "neo4j_model"
+Neo4jModel.settings.logger = Amber.settings.logger.dup
+Neo4jModel.settings.logger.progname = "Neo4jModel"
+```
 
+```crystal
 class Server
   include Neo4j::Model
 
