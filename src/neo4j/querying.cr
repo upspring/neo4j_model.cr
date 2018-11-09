@@ -271,12 +271,17 @@ module Neo4j
             end
           end
 
-          Neo4jModel.settings.logger.info "Constructed Cypher query: #{@cypher_query}"
-          Neo4jModel.settings.logger.info "  with params: #{@cypher_params.inspect}"
+          Neo4jModel.settings.logger.debug "Constructed Cypher query: #{@cypher_query}"
+          Neo4jModel.settings.logger.debug "  with params: #{@cypher_params.inspect}"
         end
 
         def execute
           build_cypher_query
+
+          start = Time.monotonic
+          result = {{@type.id}}.connection.execute(@cypher_query, @cypher_params)
+          elapsed_ms = (Time.monotonic - start).milliseconds
+          Neo4jModel.settings.logger.debug "Executed query (#{elapsed_ms}ms): #{result.type.inspect}"
 
           @_objects = Array({{@type.id}}).new
           @_rels = Array(Neo4j::Relationship).new
