@@ -165,15 +165,15 @@ module Neo4j
       {% end %}
 
       # then persist changeset to database
-      @_changes.reject!(:created_at) # reject changes to created_at once set
+      @_changes.reject!(:created_at)                   # reject changes to created_at once set
       @_changes.reject!(:updated_at) if skip_callbacks # reject changes to updated_at when called via update_columns
 
       unless @_changes.empty?
         if (t = @created_at) && !@_node.properties["created_at"]?
-          @_changes[:created_at] = { old_value: nil, new_value: t.to_unix }
+          @_changes[:created_at] = {old_value: nil, new_value: t.to_unix}
         end
         if (t = @updated_at)
-          @_changes[:updated_at] = { old_value: t.to_unix, new_value: (@updated_at = Time.utc_now).to_unix }
+          @_changes[:updated_at] = {old_value: t.to_unix, new_value: (@updated_at = Time.utc_now).to_unix}
         end
 
         # values = @_changes.transform_values { |v| v[:new_value] } # why doesn't this work?

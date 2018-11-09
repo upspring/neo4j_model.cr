@@ -6,7 +6,7 @@ module Neo4j
     def uuid
       @_uuid
     end
-    
+
     def rel
       @_rel
     end

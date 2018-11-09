@@ -24,7 +24,7 @@ module Neo4j
     property order_bys = Array(Tuple((Symbol | String), SortDirection)).new
     property skip = 0
     property limit = 500 # relatively safe default value; adjust appropriately
-    property ret = "" # note: destroy uses this to DETACH DELETE instead of RETURN
+    property ret = ""    # note: destroy uses this to DETACH DELETE instead of RETURN
 
     # for associations
     property add_proxy : QueryProxy?
@@ -60,30 +60,32 @@ module Neo4j
     end
 
     def where(str : String, **params)
-      @wheres << expand_where({ str, "", params_hash_from_named_tuple(params) })
+      @wheres << expand_where({str, "", params_hash_from_named_tuple(params)})
       clone_for_chain
     end
+
     def where(**params)
-      @wheres << expand_where({ "", "", params_hash_from_named_tuple(params) })
+      @wheres << expand_where({"", "", params_hash_from_named_tuple(params)})
       clone_for_chain
     end
 
     def where_not(str : String, **params)
-      @wheres << expand_where({ str, "NOT", params_hash_from_named_tuple(params) })
+      @wheres << expand_where({str, "NOT", params_hash_from_named_tuple(params)})
       clone_for_chain
     end
+
     def where_not(**params)
-      @wheres << expand_where({ "", "NOT", params_hash_from_named_tuple(params) })
+      @wheres << expand_where({"", "NOT", params_hash_from_named_tuple(params)})
       clone_for_chain
     end
 
     def set(**params)
-      @sets << { "", params_hash_from_named_tuple(params) }
+      @sets << {"", params_hash_from_named_tuple(params)}
       clone_for_chain
     end
 
     def set(params : ParamsHash)
-      @sets << { "", params_hash_from_named_tuple(params) }
+      @sets << {"", params_hash_from_named_tuple(params)}
       clone_for_chain
     end
 
@@ -237,11 +239,11 @@ module Neo4j
         def expand_order_by(prop : Symbol, dir : SortDirection)
           { "{{@type.id.underscore}}.`#{prop}`", dir }
         end
-    
+
         def build_cypher_query
           @cypher_query = String.build do |cypher_query|
             cypher_query << @match
-    
+
             if wheres.any?
               cypher_query << " WHERE "
               cypher_query << wheres.map { |(str, params)|
@@ -251,7 +253,7 @@ module Neo4j
             end
 
             cypher_query << " #{@create_merge}" unless @create_merge == ""
-    
+
             if sets.any?
               cypher_query << " SET "
               sets.each_with_index do |(str, params), index|
@@ -260,19 +262,19 @@ module Neo4j
                 params.each { |k, v| @cypher_params["#{k}_s#{index}"] = v if v }
               end
             end
-    
+
             cypher_query << " #{@ret}" unless @ret == ""
-    
+
             if @create_merge == "" && @ret !~ /delete/i
               cypher_query << " ORDER BY " + @order_bys.map { |(prop, dir)| "#{prop} #{dir.to_s}" }.join(", ") if @order_bys.any?
               cypher_query << " SKIP #{@skip} LIMIT #{@limit}"
             end
           end
-    
+
           puts "#{Time.utc_now.to_s("%H:%M:%S")} neo4j_model | Constructed Cypher query: #{@cypher_query}"
           puts "#{Time.utc_now.to_s("%H:%M:%S")} neo4j_model |   with params: #{@cypher_params.inspect}"
         end
-    
+
         def execute
           build_cypher_query
 
@@ -345,16 +347,16 @@ module Neo4j
             yield obj, @_rels[index]
           end
         end
-  
+
         def find!(uuid : String?)
           raise "find! called with nil uuid param" unless uuid
-  
+
           where(uuid: uuid).first
         end
 
         def find(uuid : String?)
           return nil unless uuid
-  
+
           where(uuid: uuid).first?
         end
 
