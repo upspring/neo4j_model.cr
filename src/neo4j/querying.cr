@@ -480,11 +480,15 @@ module Neo4j
       end
 
       def self.create(params : Hash)
-        new(params).save
+        obj = new(params)
+        obj.save
+        obj
       end
 
       def self.create(**params)
-        new(**params).save
+        obj = new(**params)
+        obj.save
+        obj
       end
 
       def self.delete_all
