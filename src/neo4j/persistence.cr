@@ -5,7 +5,7 @@ module Neo4j
   module Model
     # supported property types (could expand in the future)
     alias Integer = Int8 | Int16 | Int32 | Int64
-    alias PropertyType = Nil | Bool | String | Integer | Float64 | Array(PropertyType) | Hash(String, PropertyType)
+    alias PropertyType = Nil | Bool | String | Integer | Float64 | Time | Array(PropertyType) | Hash(String, PropertyType)
 
     # if you want to use timestamps, add something like this to your model class
     # (make sure to initialize to a non-nil value, like Time.utc_now)
@@ -58,16 +58,18 @@ module Neo4j
               if (val = hash["{{var}}"]?)
                 if val.is_a?(Bool)
                   @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
-                else
-                  # FIXME: interpret string or integer values?
+                elsif val.is_a?(Int)
+                  @{{var}} = hash["{{var}}"] == 1
+                elsif val.is_a?(String)
+                  @{{var}} = ["1", "true"].includes?(hash["{{var}}"].as(String).downcase)
                 end
               end
             {% elsif var.type <= Integer || (var.type.union? && (var.type.union_types.includes?(Int8) || var.type.union_types.includes?(Int16) || var.type.union_types.includes?(Int32) || var.type.union_types.includes?(Int64))) %}
               if (val = hash["{{var}}"]?)
                 if val.is_a?(Int)
                   @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
-                else
-                  # FIXME: interpret string values?
+                elsif val.is_a?(String)
+                  @{{var}} = hash["{{var}}"].as(String).to_i
                 end
               end
             {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
@@ -113,6 +115,13 @@ module Neo4j
     end
 
     def update(hash : Hash(String, PropertyType))
+      set_attributes(hash)
+      save
+    end
+
+    def update(**params)
+      hash = Hash(String, PropertyType).new
+      params.each { |k, v| hash[k.to_s] = v }
       set_attributes(hash)
       save
     end
