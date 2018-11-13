@@ -366,6 +366,38 @@ module Neo4j
           where(uuid: uuid).first?
         end
 
+        def find_by(**params)
+          where(**params).first?
+        end
+  
+        def find_or_initialize_by(**params)
+          find_by(**params) || new(**params)
+        end
+  
+        def find_or_create_by(**params)
+          find_by(**params) || create(**params)
+        end
+
+        def new(params : Hash)
+          {{@type.id}}.new(params)
+        end
+  
+        def new(**params)
+          {{@type.id}}.new(**params)
+        end
+  
+        def create(params : Hash)
+          obj = new(params)
+          obj.save
+          obj
+        end
+  
+        def create(**params)
+          obj = new(**params)
+          obj.save
+          obj
+        end
+  
         def first : {{@type.id}}
           (executed? ? to_a : limit(1).to_a).first
         end

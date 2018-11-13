@@ -102,6 +102,7 @@ member = org.members.users.where(uuid: user.uuid).return(member: :member)
 * more callbacks
 * migrations (for constraints and indexes)
 * validations
+* connection pool (currently creates a new connection every time)
 
 ## Contributing
 
