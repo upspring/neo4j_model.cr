@@ -37,6 +37,9 @@ module Neo4j
           @{{var}} = JSON.parse(node.properties["{{var}}"].as(String)).as_h?.try &.map { |_k, v| v.as_s }
         {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
           @{{var}} = Time.unix(node.properties["{{var}}"].as(Int))
+        {% elsif var.type <= Bool || (var.type.union? && var.type.union_types.includes?(Bool)) %}
+          val = node.properties["{{var}}"]
+          @{{var}} = val.nil? ? nil : val.as(Bool)
         {% else %}
           @{{var}} = node.properties["{{var}}"].as(typeof(@{{var}}))
         {% end %}
@@ -57,7 +60,7 @@ module Neo4j
             {% if var.type <= Bool || (var.type.union? && var.type.union_types.includes?(Bool)) %}
               if (val = hash["{{var}}"]?)
                 if val.is_a?(Bool)
-                  @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+                  @{{var}} = hash["{{var}}"].as(Bool)
                 elsif val.is_a?(Int)
                   @{{var}} = hash["{{var}}"] == 1
                 elsif val.is_a?(String)
@@ -75,7 +78,7 @@ module Neo4j
             {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
               if (val = hash["{{var}}"]?)
                 if val.is_a?(Time)
-                  @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+                  @{{var}} = hash["{{var}}"].as(Time)
                 else
                   # FIXME: interpret string or integer values
                 end
@@ -106,39 +109,41 @@ module Neo4j
       {% end %}
     end
 
-    def reload
-      return unless persisted?
+    def reload : Bool
+      return false unless persisted?
 
       if (db_version = self.class.find(uuid))
         set_attributes(from: db_version._node)
       end
+      
+      true
     end
 
-    def update(hash : Hash(String, PropertyType))
+    def update(hash : Hash(String, PropertyType)) : Bool
       set_attributes(hash)
       save
     end
 
-    def update(**params)
+    def update(**params) : Bool
       hash = Hash(String, PropertyType).new
       params.each { |k, v| hash[k.to_s] = v }
       set_attributes(hash)
       save
     end
 
-    def update_columns(**params)
+    def update_columns(**params) : Bool
       hash = Hash(String, PropertyType).new
       params.each { |k, v| hash[k.to_s] = v }
       update_columns(hash)
     end
 
-    def update_columns(hash : Hash(String, PropertyType))
+    def update_columns(hash : Hash(String, PropertyType)) : Bool
       set_attributes(hash)
       save(skip_callbacks: true)
     end
 
-    def save(*, skip_callbacks = false)
-      return unless valid?(skip_callbacks: skip_callbacks)
+    def save(*, skip_callbacks = false) : Bool
+      return false unless valid?(skip_callbacks: skip_callbacks)
 
       unless skip_callbacks
         unless @@_before_save_callback.call(self)
@@ -230,7 +235,7 @@ module Neo4j
         end
       end
 
-      true # FIXME
+      true
     end
   end
 end
