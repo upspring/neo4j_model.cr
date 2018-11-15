@@ -16,6 +16,8 @@ module Neo4j
     # expose query building properties to make debugging easier
     property cypher_query : String?
     property cypher_params = Hash(String, Neo4j::Type).new
+    property obj_variable_name : String = "n"
+    property rel_variable_name : String = "r"
 
     property match = ""
     property wheres = Array(ExpandedWhere).new
@@ -37,10 +39,23 @@ module Neo4j
       proxy
     end
 
+    # TODO: want to expose #query_as as part of public api, but would first need to do
+    #       some find/replace magic on existing match/create_merge/wheres/ret
+    # NOTE: ActiveNode called this .as, but crystal doesn't allow that name
+    protected def query_as(obj_var : (Symbol | String))
+      @obj_variable_name = obj_var.to_s
+      self
+    end
+
+    protected def query_as(obj_var : (Symbol | String), rel_var : (Symbol | String))
+      @rel_variable_name = rel_var.to_s
+      query_as(obj_var)
+    end
+
     def clone_for_chain
       # clone the query, not the results
       new_query_proxy = self.class.new(@match, @create_merge, @ret)
-      {% for var in [:wheres, :sets, :order_bys, :skip, :limit] %}
+      {% for var in [:label, :obj_variable_name, :rel_variable_name, :wheres, :sets, :order_bys, :skip, :limit] %}
         new_query_proxy.{{var.id}} = @{{var.id}}
       {% end %}
 
@@ -150,10 +165,6 @@ module Neo4j
       class ::Neo4j::QueryProxy
         def return(*, {{@type.id.underscore}}) # argument must not have a default value
           proxy = chain {{@type.id}}::QueryProxy.new
-
-          # FIXME? maybe later... for now let's ignore the value passed
-          # proxy.ret = "RETURN #{{{@type.id.underscore}}}"
-
           proxy.first?
         end
       end
@@ -168,12 +179,17 @@ module Neo4j
         @_objects = Array({{@type.id}}).new
         @_rels = Array(Neo4j::Relationship).new
 
-        def initialize(@match = "MATCH ({{@type.id.underscore}}:#{{{@type.id}}.label})", @ret = "RETURN {{@type.id.underscore}}") # all other parameters are added by chaining methods
+        def initialize(@match = "MATCH ({{@type.id.underscore}}:#{{{@type.id}}.label})",
+                       @ret = "RETURN {{@type.id.underscore}}") # all other parameters are added by chaining methods
           @label = {{@type.id}}.label
+          @obj_variable_name = "{{@type.id.underscore}}"
         end
 
-        def initialize(@match, @create_merge, @ret) # all other parameters are added by chaining methods
+        def initialize(@match,
+                       @create_merge,
+                       @ret) # all other parameters are added by chaining methods
           @label = {{@type.id}}.label
+          @obj_variable_name = "{{@type.id.underscore}}"
         end
 
         def <<(obj : (String | {{@type.id}}))
@@ -221,9 +237,9 @@ module Neo4j
               cypher_query << params.map { |k, v|
                 if v
                   new_params["#{k}_w#{index}"] = v
-                  "({{@type.id.underscore}}.`#{k}` = $#{k}_w#{index})"
+                  "(#{obj_variable_name}.`#{k}` = $#{k}_w#{index})"
                 else
-                  "({{@type.id.underscore}}.`#{k}` IS NULL)"
+                  "(#{obj_variable_name}.`#{k}` IS NULL)"
                 end
               }.join(" AND ")
             else
@@ -237,7 +253,7 @@ module Neo4j
         end
 
         def expand_order_by(prop : Symbol, dir : SortDirection)
-          { "{{@type.id.underscore}}.`#{prop}`", dir }
+          { "#{obj_variable_name}.`#{prop}`", dir }
         end
 
         def build_cypher_query
@@ -258,7 +274,7 @@ module Neo4j
               cypher_query << " SET "
               sets.each_with_index do |(str, params), index|
                 cypher_query << ", " if index > 0
-                cypher_query << "#{str} " + params.map { |k, v| v ? "{{@type.id.underscore}}.`#{k}` = $#{k}_s#{index}" : "{{@type.id.underscore}}.`#{k}` = NULL" }.join(", ")
+                cypher_query << "#{str} " + params.map { |k, v| v ? "#{obj_variable_name}.`#{k}` = $#{k}_s#{index}" : "#{obj_variable_name}.`#{k}` = NULL" }.join(", ")
                 params.each { |k, v| @cypher_params["#{k}_s#{index}"] = v if v }
               end
             end
@@ -326,7 +342,7 @@ module Neo4j
         end
 
         def delete_all
-          @ret = "DETACH DELETE {{@type.id.underscore}}"
+          @ret = "DETACH DELETE n:#{label}"
           execute
           true # FIXME: check for errors
         end
@@ -447,15 +463,18 @@ module Neo4j
       end
 
       def self.new_create_proxy
-        QueryProxy.new("CREATE ({{@type.id.underscore}}:#{label})")
+        QueryProxy.new("CREATE ({{@type.id.underscore}}:#{label})").query_as(:{{@type.id.underscore}})
       end
 
       # query proxy that returns this instance (used as a base for association queries)
+      @_query_proxy : QueryProxy?
       def query_proxy : QueryProxy
-        @_query_proxy ||= QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label} {uuid: '#{uuid}'})", "RETURN {{@type.id.underscore}}")
-        proxy = @_query_proxy.not_nil! # FIXME :-(
+        if (proxy = @_query_proxy)
+          return proxy
+        end
+        proxy = QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label} {uuid: '#{uuid}'})", "RETURN {{@type.id.underscore}}").query_as(:{{@type.id.underscore}})
         proxy.uuid = uuid
-        proxy
+        @_query_proxy = proxy
       end
 
       def self.all
@@ -547,7 +566,7 @@ module Neo4j
       end
 
       def destroy
-        self.class.query_proxy.new("MATCH ({{@type.id.underscore}}:#{label})", "DETACH DELETE n").where(uuid: uuid).execute
+        self.class.query_proxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})", "DETACH DELETE n").execute
         true # FIXME: check for errors
       end
     end # macro included

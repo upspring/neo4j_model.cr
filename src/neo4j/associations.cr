@@ -12,8 +12,8 @@ module Neo4j
         # QueryProxy instance method, for chaining
         # FIXME: just adding 's' to pluralize is not always right
         def {{name}}s : {{klass.id}}::QueryProxy
-          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})-[r:{{rel_type.id}}]->({{klass.id.underscore}}:#{{{klass.id}}.label})",
-                                               "RETURN {{klass.id.underscore}}, r")
+          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})-[r:{{rel_type.id}}]->({{name}}:#{{{klass.id}}.label})",
+                                               "RETURN {{name}}, r").query_as(:{{name}})
           self.chain proxy
         end
 
@@ -42,6 +42,7 @@ module Neo4j
       def {{name}}=(target : {{klass.id}}?)
         if target
           @{{name}}_id = target.uuid
+          target
         else
           @{{name}}_id = nil
         end
@@ -76,8 +77,8 @@ module Neo4j
       class QueryProxy
         # QueryProxy instance method, for chaining
         def {{name}} : {{klass.id}}::QueryProxy
-          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})-[r:{{rel_type.id}}]->({{klass.id.underscore}}:#{{{klass.id}}.label})",
-                                               "RETURN {{klass.id.underscore}}, r")
+          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})-[r:{{rel_type.id}}]->({{name}}:#{{{klass.id}}.label})",
+                                               "RETURN {{name}}, r").query_as(:{{name}})
           self.chain proxy
         end
       end
@@ -123,8 +124,8 @@ module Neo4j
         # QueryProxy instance method, for chaining
         # FIXME: just adding 's' to pluralize is not always right
         def {{name}}s : {{klass.id}}::QueryProxy
-          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})<-[r:{{rel_type.id}}]-({{klass.id.underscore}}:#{{{klass.id}}.label})",
-                                               "RETURN {{klass.id.underscore}}, r")
+          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})<-[r:{{rel_type.id}}]-({{name}}:#{{{klass.id}}.label})",
+                                               "RETURN {{name}}, r").query_as(:{{name}})
           self.chain proxy
         end
 
@@ -152,7 +153,8 @@ module Neo4j
 
       def {{name}}=(target : {{klass.id}}?)
         if target
-          {{name}}_id = target.uuid
+          self.{{name}}_id = target.uuid
+          target
         else
           @{{name}}_id = nil
         end
@@ -186,8 +188,8 @@ module Neo4j
       class QueryProxy
         # QueryProxy instance method, for chaining
         def {{name}} : {{klass.id}}::QueryProxy
-          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})<-[r:{{rel_type.id}}]-({{klass.id.underscore}}:#{{{klass.id}}.label})",
-                                               "RETURN {{klass.id.underscore}}, r")
+          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})<-[r:{{rel_type.id}}]-({{name}}:#{{{klass.id}}.label})",
+                                               "RETURN {{name}}, r").query_as(:{{name}})
           self.chain proxy
         end
       end

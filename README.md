@@ -2,6 +2,7 @@
 
 [![Version](https://img.shields.io/github/tag/upspring/neo4j_model.cr.svg?maxAge=360)](https://github.com/upspring/neo4j_model.cr/releases/latest)
 [![License](https://img.shields.io/github/license/upspring/neo4j_model.cr.svg)](https://github.com/upspring/neo4j_model.cr/blob/master/LICENSE)
+<!-- [![Gitter](https://img.shields.io/gitter/room/upspring/neo4j_model.cr.svg)](https://gitter.im/upspring/neo4j_model.cr) -->
 
 Current status: Moving fast and breaking things. Give it a try! Just don't use in production. There's no test suite yet and I am new to Crystal (coming from Ruby).
 
@@ -76,6 +77,7 @@ class Website
 
   def generate_api_key
     @api_key ||= UUID.random.to_s
+    true # callbacks can return false/nil to abort/indicate failure (or truthy values to continue execution/indicate success)
   end
 end
 ```
