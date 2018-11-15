@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    volumes:
+      - .:/home/app/myapp:delegated
+    environment:
+      NEO4J_URL: bolt://neo4j@neo4j_test:7687
+
+  neo4j_test:
+    image: neo4j:3.4
+    environment:
+      NEO4J_AUTH: none
+      NEO4J_dbms_memory_pagecache_size: 64m
+      NEO4J_dbms_memory_heap_maxSize: 64m

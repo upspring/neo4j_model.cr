@@ -97,7 +97,7 @@ member = org.members.users.where(uuid: user.uuid).return(member: :member)
 
 ## TODO
 
-* specs!
+* more specs!
 * expand #where to accept arrays and ranges
 * update_all
 * make relationship properties writable (probably via custom rel class, similar to ActiveRel)
@@ -107,6 +107,8 @@ member = org.members.users.where(uuid: user.uuid).return(member: :member)
 * connection pool (currently creates a new connection every time)
 
 ## Contributing
+
+The easiest way to run the specs is via Docker. `docker-compose up` to start the containers (and Ctrl-C to stop them when you're done). Then use the `bin/guardian-docker` script to start guardian, which will watch all the files in src/ and spec/ and run the test suite when any of them is modified.
 
 1. Fork it (<https://github.com/upspring/neo4j_model.cr/fork>)
 2. Create your feature branch (`git checkout -b my-new-feature`)

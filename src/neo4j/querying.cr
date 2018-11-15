@@ -342,7 +342,7 @@ module Neo4j
         end
 
         def delete_all
-          @ret = "DETACH DELETE n:#{label}"
+          @ret = "DETACH DELETE #{obj_variable_name}"
           execute
           true # FIXME: check for errors
         end

@@ -1,0 +1,2 @@
+files: ./{spec,src}/**/*.cr
+run: crystal spec
