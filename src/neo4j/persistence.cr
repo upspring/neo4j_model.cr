@@ -11,8 +11,6 @@ module Neo4j
     # (make sure to initialize to a non-nil value, like Time.utc_now)
     #   property created_at : Time? = Time.utc_now
     #   property updated_at : Time? = Time.utc_now
-    @created_at : Time?
-    @updated_at : Time?
 
     alias Changeset = NamedTuple(old_value: Neo4j::Type, new_value: Neo4j::Type)
 
@@ -32,19 +30,19 @@ module Neo4j
       {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
       if node.properties.has_key?("{{var}}")
         {% if var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
-          @{{var}} = JSON.parse(node.properties["{{var}}"].as(String)).as_a?.try &.map(&.as_s)
+          self.{{var}} = JSON.parse(node.properties["{{var}}"].as(String)).as_a?.try &.map(&.as_s)
         {% elsif var.type <= Hash(String, String) || (var.type.union? && var.type.union_types.includes?(Hash(String, String))) %}
-          @{{var}} = JSON.parse(node.properties["{{var}}"].as(String)).as_h?.try &.map { |_k, v| v.as_s }
+          self.{{var}} = JSON.parse(node.properties["{{var}}"].as(String)).as_h?.try &.map { |_k, v| v.as_s }
         {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
-          @{{var}} = Time.unix(node.properties["{{var}}"].as(Int))
+          self.{{var}} = Time.unix(node.properties["{{var}}"].as(Int))
         {% elsif var.type <= Bool || (var.type.union? && var.type.union_types.includes?(Bool)) %}
           val = node.properties["{{var}}"]
-          @{{var}} = val.nil? ? nil : val.as(Bool)
+          self.{{var}} = val.nil? ? nil : val.as(Bool)
         {% else %}
-          @{{var}} = node.properties["{{var}}"].as(typeof(@{{var}}))
+          self.{{var}} = node.properties["{{var}}"].as(typeof(@{{var}}))
         {% end %}
       else
-        @{{var}} = nil
+        self.{{var}} = nil
       end
       {% end %}
 
@@ -55,30 +53,30 @@ module Neo4j
       {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
         if hash.has_key?("{{var}}")
           if hash["{{var}}"].nil?
-            @{{var}} = nil
+            self.{{var}} = nil
           else
             {% if var.type <= Bool || (var.type.union? && var.type.union_types.includes?(Bool)) %}
               if (val = hash["{{var}}"]?)
                 if val.is_a?(Bool)
-                  @{{var}} = hash["{{var}}"].as(Bool)
+                  self.{{var}} = hash["{{var}}"].as(Bool)
                 elsif val.is_a?(Int)
-                  @{{var}} = hash["{{var}}"] == 1
+                  self.{{var}} = hash["{{var}}"] == 1
                 elsif val.is_a?(String)
-                  @{{var}} = ["1", "true"].includes?(hash["{{var}}"].as(String).downcase)
+                  self.{{var}} = ["1", "true"].includes?(hash["{{var}}"].as(String).downcase)
                 end
               end
             {% elsif var.type <= Integer || (var.type.union? && (var.type.union_types.includes?(Int8) || var.type.union_types.includes?(Int16) || var.type.union_types.includes?(Int32) || var.type.union_types.includes?(Int64))) %}
               if (val = hash["{{var}}"]?)
                 if val.is_a?(Int)
-                  @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+                  self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
                 elsif val.is_a?(String)
-                  @{{var}} = hash["{{var}}"].as(String).to_i
+                  self.{{var}} = hash["{{var}}"].as(String).to_i
                 end
               end
             {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
               if (val = hash["{{var}}"]?)
                 if val.is_a?(Time)
-                  @{{var}} = hash["{{var}}"].as(Time)
+                  self.{{var}} = hash["{{var}}"].as(Time)
                 else
                   # FIXME: interpret string or integer values
                 end
@@ -86,7 +84,7 @@ module Neo4j
             {% elsif var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
               if (val = hash["{{var}}"]?)
                 if val.is_a?(Array)
-                  @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+                  self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
                 else
                   # FIXME: interpret string values?
                 end
@@ -94,14 +92,14 @@ module Neo4j
             {% elsif var.type <= Hash(String, String) || (var.type.union? && var.type.union_types.includes?(Hash(String, String))) %}
               if (val = hash["{{var}}"]?)
                 if val.is_a?(Hash)
-                  @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+                  self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
                 else
                   # FIXME: interpret string values?
                 end
               end
             {% elsif var.type <= String || (var.type.union? && var.type.union_types.includes?(String)) %}
               if hash.has_key?("{{var}}")
-                @{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+                self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
               end
             {% end %}
           end
@@ -115,7 +113,7 @@ module Neo4j
       if (db_version = self.class.find(uuid))
         set_attributes(from: db_version._node)
       end
-      
+
       true
     end
 
@@ -183,12 +181,16 @@ module Neo4j
       @_changes.reject!(:updated_at) if skip_callbacks # reject changes to updated_at when called via update_columns
 
       unless @_changes.empty?
+        {% if @type.instance_vars.includes?(:created_at) %}
         if (t = @created_at) && !@_node.properties["created_at"]?
           @_changes[:created_at] = {old_value: nil, new_value: t.to_unix}
         end
+        {% end %}
+        {% if @type.instance_vars.includes?(:updated_at) %}
         if (t = @updated_at)
           @_changes[:updated_at] = {old_value: t.to_unix, new_value: (@updated_at = Time.utc_now).to_unix}
         end
+        {% end %}
 
         # values = @_changes.transform_values { |v| v[:new_value] } # why doesn't this work?
         values = Hash.zip(@_changes.keys, @_changes.values.map { |v| v[:new_value] })
@@ -207,7 +209,7 @@ module Neo4j
 
       # look for changes to associations and persist as needed
       {% for var in @type.instance_vars.select { |v| v.id =~ /_ids?$/ } %}
-      {% if var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
+        {% if var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
           if (old_value = @_node.properties["{{var}}"]?) != (new_value = @{{var}}.to_json)
             @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
             persist_{{var}}
