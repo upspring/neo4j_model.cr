@@ -101,16 +101,22 @@ module Neo4j
         if (ids = @{{name}}_ids)
           ids
         else
-          ids = {{name}}.to_a.map(&.id).compact
-          @{{name}}_ids = ids
-          ids
+          @{{name}}_ids = {{name}}.to_a.map(&.id).compact
         end
       end
 
       def persist_{{name}}_ids
-        # TODO
-        # add new rels
-        # remove old rels
+        # at this point, @name_ids is the desired state, and
+        # the database rels (existing_ids) are not there yet
+        existing_ids = {{name}}.to_a.map(&.id).compact
+        new_ids = {{name}}_ids - existing_ids
+        old_ids = existing_ids - {{name}}_ids
+
+        # add new rels, remove old rels
+        new_ids.each { |id| {{name}} << id }
+        old_ids.each { |id| {{name}}.delete id }
+
+        true
       end
     end
 
@@ -200,8 +206,8 @@ module Neo4j
 
         # while we have the proper context (label & uuid), generate queries to add and remove relationships
         proxy.add_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: $target_uuid})",
-                                                       "MERGE (n)-[r:{{rel_type.id}}]->(m)", "RETURN m, r")
-        proxy.delete_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})-[r:{{rel_type.id}}]->(m:#{{{klass.id}}.label} {uuid: $target_uuid})", "DELETE r")
+                                                       "MERGE (n)<-[r:{{rel_type.id}}]-(m)", "RETURN m, r")
+        proxy.delete_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})<-[r:{{rel_type.id}}]-(m:#{{{klass.id}}.label} {uuid: $target_uuid})", "DELETE r")
 
         # this is the beginning of the chain, should start with a uuid match (provided by #query_proxy)
         context = query_proxy
@@ -212,16 +218,22 @@ module Neo4j
         if (ids = @{{name}}_ids)
           ids
         else
-          ids = {{name}}.to_a.map(&.id).compact
-          @{{name}}_ids = ids
-          ids
+          @{{name}}_ids = {{name}}.to_a.map(&.id).compact
         end
       end
 
       def persist_{{name}}_ids
-        # TODO
-        # add new rels
-        # remove old rels
+        # at this point, @name_ids is the desired state, and
+        # the database rels (existing_ids) are not there yet
+        existing_ids = {{name}}.to_a.map(&.id).compact
+        new_ids = {{name}}_ids - existing_ids
+        old_ids = existing_ids - {{name}}_ids
+
+        # add new rels, remove old rels
+        new_ids.each { |id| {{name}} << id }
+        old_ids.each { |id| {{name}}.delete id }
+
+        true
       end
     end
   end
