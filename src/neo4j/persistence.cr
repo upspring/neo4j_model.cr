@@ -5,7 +5,7 @@ module Neo4j
   module Model
     # supported property types (could expand in the future)
     alias Integer = Int8 | Int16 | Int32 | Int64
-    alias PropertyType = Nil | Bool | String | Integer | Float64 | Time | Array(PropertyType) | Hash(String, PropertyType)
+    alias PropertyType = Nil | Bool | String | Integer | Float64 | Time | Array(String) | Hash(String, String)
 
     # if you want to use timestamps, add something like this to your model class
     # (make sure to initialize to a non-nil value, like Time.utc_now)
