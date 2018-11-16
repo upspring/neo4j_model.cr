@@ -5,7 +5,7 @@ require "../src/neo4j_model"
 Spec.before_each { detach_all }
 
 def detach_all
-  connection = Neo4j::Bolt::Connection.new(ENV["NEO4J_URL"], ssl: false)
+  connection = Neo4j::Bolt::Connection.new(Neo4jModel.settings.neo4j_bolt_url, ssl: false)
   connection.execute "MATCH (n) DETACH DELETE n"
 end
 

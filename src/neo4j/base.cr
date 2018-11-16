@@ -33,7 +33,7 @@ module Neo4j
       class_getter label : String = "{{@type.name}}"
 
       def self.connection
-        Neo4j::Bolt::Connection.new(ENV["NEO4J_URL"]? || "bolt://neo4j@localhost:7687", ssl: false)
+        Neo4j::Bolt::Connection.new(Neo4jModel.settings.neo4j_bolt_url, ssl: false)
       end
 
       def initialize
