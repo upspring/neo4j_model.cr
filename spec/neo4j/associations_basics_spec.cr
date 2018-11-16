@@ -2,9 +2,6 @@ require "../spec_helper"
 
 describe Neo4jModel do
   it "supports belongs_to/has_many" do
-    Movie.delete_all
-    Director.delete_all
-
     m = Movie.create(name: "Titanic", year: 1997)
     d = Director.create(name: "James Cameron")
 
@@ -31,9 +28,6 @@ describe Neo4jModel do
   end
 
   it "supports belongs_to_many/has_many" do
-    Movie.delete_all
-    Genre.delete_all
-
     m = Movie.create(name: "Titanic", year: 1997)
     g = Genre.create(name: "Romance")
 
@@ -55,9 +49,6 @@ describe Neo4jModel do
   end
 
   it "supports has_one/belongs_to_many" do
-    Actor.delete_all
-    Agent.delete_all
-
     actor = Actor.create(name: "Leonardo DiCaprio")
     agent = Agent.create(name: "Joe Smith")
 

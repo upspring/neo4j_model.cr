@@ -2,16 +2,26 @@ require "spec"
 require "logger"
 require "../src/neo4j_model"
 
+Spec.before_each { detach_all }
+
+def detach_all
+  connection = Neo4j::Bolt::Connection.new(ENV["NEO4J_URL"], ssl: false)
+  connection.execute "MATCH (n) DETACH DELETE n"
+end
+
 class Movie
   include Neo4j::Model
-
-  property name : String?
-  property year : Integer?
 
   belongs_to_many Studio, rel_type: :owns
   belongs_to Director, rel_type: :directed
   belongs_to_many Genre, rel_type: :includes
   belongs_to_many Actor, rel_type: :acted_in
+
+  property name : String?
+  property year : Integer?
+
+  property created_at : Time? = Time.utc_now
+  property updated_at : Time? = Time.utc_now
 end
 
 class Director

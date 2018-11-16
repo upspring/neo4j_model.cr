@@ -2,15 +2,11 @@ require "../spec_helper"
 
 describe Neo4jModel do
   it "supports association chaining" do
-    Genre.delete_all
-    Movie.delete_all
-    Actor.delete_all
-
     g = Genre.create(name: "Romance")
 
     # FIXME: we do want scoped create to work eventually
     # m = g.movies.create(name: "Titanic")
- 
+
     m = Movie.create(name: "Titanic")
     g.movies << m
     m.genres.to_a.should contain(g)

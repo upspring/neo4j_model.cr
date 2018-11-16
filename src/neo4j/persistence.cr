@@ -181,12 +181,12 @@ module Neo4j
       @_changes.reject!(:updated_at) if skip_callbacks # reject changes to updated_at when called via update_columns
 
       unless @_changes.empty?
-        {% if @type.instance_vars.includes?(:created_at) %}
+        {% unless @type.instance_vars.select { |v| v.id == "created_at" }.empty? %}
         if (t = @created_at) && !@_node.properties["created_at"]?
           @_changes[:created_at] = {old_value: nil, new_value: t.to_unix}
         end
         {% end %}
-        {% if @type.instance_vars.includes?(:updated_at) %}
+        {% unless @type.instance_vars.select { |v| v.id == "updated_at" }.empty? %}
         if (t = @updated_at)
           @_changes[:updated_at] = {old_value: t.to_unix, new_value: (@updated_at = Time.utc_now).to_unix}
         end
