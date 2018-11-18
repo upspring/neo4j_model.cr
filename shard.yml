@@ -11,3 +11,5 @@ license: MIT
 dependencies:
   neo4j:
     github: jgaskins/neo4j.cr
+  pool:
+    github: ysbaddaden/pool
