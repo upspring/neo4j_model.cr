@@ -295,7 +295,7 @@ module Neo4j
           build_cypher_query
 
           start = Time.monotonic
-          result = {{@type.id}}.connection.execute(@cypher_query, @cypher_params)
+          result = {{@type.id}}.with_connection(&.execute(@cypher_query, @cypher_params))
           elapsed_ms = (Time.monotonic - start).milliseconds
           Neo4jModel.settings.logger.debug "Executed query (#{elapsed_ms}ms): #{result.type.inspect}"
 

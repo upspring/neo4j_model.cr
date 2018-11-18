@@ -1,8 +1,13 @@
 require "neo4j"
 require "uuid"
+require "pool/connection"
 
 module Neo4j
   module Model
+    ConnectionPool = ::ConnectionPool(Bolt::Connection).new do
+      Bolt::Connection.new(Neo4jModel.settings.neo4j_bolt_url, ssl: false)
+    end
+
     def uuid
       @_uuid
     end
@@ -32,8 +37,10 @@ module Neo4j
       # override if you want to use a different label
       class_getter label : String = "{{@type.name}}"
 
-      def self.connection
-        Neo4j::Bolt::Connection.new(Neo4jModel.settings.neo4j_bolt_url, ssl: false)
+      def {{@type.id}}.with_connection
+        ConnectionPool.connection do |connection|
+          yield connection
+        end
       end
 
       def initialize
