@@ -1,13 +1,13 @@
 # neo4j_model.cr - a Neo4j ORM for Crystal
 
 [![Version](https://img.shields.io/github/tag/upspring/neo4j_model.cr.svg?maxAge=360)](https://github.com/upspring/neo4j_model.cr/releases/latest)
-[![Build Status](https://travis-ci.org/upspring/neo4j_model.cr.svg?branch=master)](https://travis-ci.org/upspring/neo4j_model.cr.svg?branch=master)
+[![Build Status](https://travis-ci.org/upspring/neo4j_model.cr.svg?branch=master)](https://travis-ci.org/upspring/neo4j_model.cr)
 [![License](https://img.shields.io/github/license/upspring/neo4j_model.cr.svg)](https://github.com/upspring/neo4j_model.cr/blob/master/LICENSE)
 <!-- [![Gitter](https://img.shields.io/gitter/room/upspring/neo4j_model.cr.svg)](https://gitter.im/upspring/neo4j_model.cr) -->
 
 Current status: API stabilizing, but minor changes possible. Expecting to reach 1.0 by end of 2018. Give it a try on a new project! Just don't use in production yet.
 
-The goal is a stable and full-featured Neo4j ORM for Crystal. Currently Bolt-only (uses [neo4j.cr](https://github.com/jgaskins/neo4j.cr). Inspired by ActiveNode/[Neo4j.rb](https://github.com/neo4jrb/neo4j).
+The goal is a stable and full-featured Neo4j ORM for Crystal. Currently Bolt-only (uses [neo4j.cr](https://github.com/jgaskins/neo4j.cr)). Inspired by ActiveNode/[Neo4j.rb](https://github.com/neo4jrb/neo4j).
 
 Features:
 
@@ -20,6 +20,7 @@ Features:
 * query proxy to allow method chaining (query is not executed until you call `#to_a`, `#count`, or try to access a record)
 * associations (has_one, has_many, belongs_to, belongs_to_many), chainable (e.g. actor.movies.genres)
 * scopes a la ActiveRecord
+* connection pooling ([#1](https://github.com/upspring/neo4j_model.cr/pull/1))
 
 The provided association types do assume/impose a convention on the relationship direction, but I find it easier to think of relationships this way, rather than stick with Neo4j's required yet meaningless direction (the way ActiveNode does with the :in/:out parameter).
 
@@ -62,7 +63,7 @@ class Website
 
   before_save :generate_api_key
 
-  scope http2, -> { where(supports_http2: true) }
+  scope http2, ->{ where(supports_http2: true) }
 
   property _internal : Bool # properties starting with _ will not be synchronized with database
 
@@ -98,18 +99,17 @@ member = org.members.users.where(uuid: user.uuid).return(member: :member)
 
 ## TODO
 
-* more specs!
 * expand #where to accept arrays and ranges
-* update_all
-* make relationship properties writable (probably via custom rel class, similar to ActiveRel)
-* more callbacks
-* migrations (for constraints and indexes)
+* QueryProxy#update_all (set property values on all matched nodes)
+* make relationship properties writable (currently only possible via custom Cypher queries)
+* more callbacks?
 * validations
-* connection pool (currently creates a new connection every time)
+* migrations (to add constraints and indexes)
+* more specs
 
 ## Contributing
 
-The safest and easiest way to run the specs is via Docker (safety is important, because the specs empty the database frequently). `docker-compose up` to start the containers (and Ctrl-C to stop them when you're done). Then use the `bin/guardian-docker` script to start guardian, which will watch all the files in src/ and spec/ and run the test suite when any of them is modified.
+The safest and easiest way to run the specs is via Docker (and safety is important, because the specs empty the database). `docker-compose up` to start the containers (and Ctrl-C to stop them when you're done). Then use the `bin/guardian-docker` script to start guardian, which will watch all the files in src/ and spec/ and run the test suite when any of them is modified.
 
 1. Fork it (<https://github.com/upspring/neo4j_model.cr/fork>)
 2. Create your feature branch (`git checkout -b my-new-feature`)
@@ -119,4 +119,5 @@ The safest and easiest way to run the specs is via Docker (safety is important, 
 
 ## Contributors
 
-- [anamba](https://github.com/anamba) Aaron Namba ([Upspring](https://github.com/organizations/upspring)) - creator, maintainer
+- [anamba](https://github.com/anamba) Aaron Namba ([Upspring](https://github.com/organizations/upspring)) - creator/maintainer
+- [jgaskins](https://github.com/jgaskins) Jamie Gaskins - creator/maintainer of [neo4j.cr](https://github.com/jgaskins/neo4j.cr)
