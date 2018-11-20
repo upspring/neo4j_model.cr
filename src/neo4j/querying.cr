@@ -322,11 +322,13 @@ module Neo4j
 
           count : Integer = 0
 
-          {{@type.id}}.connection.execute(@cypher_query, @cypher_params).each do |result|
-            if (val = result[0]?)
-              count = val.as(Integer)
-            else
-              raise "Error while reading value of COUNT"
+          {{@type.id}}.with_connection do |conn|
+            conn.execute(@cypher_query, @cypher_params).each do |result|
+              if (val = result[0]?)
+                count = val.as(Integer)
+              else
+                raise "Error while reading value of COUNT"
+              end
             end
           end
 
