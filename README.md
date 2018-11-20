@@ -97,15 +97,20 @@ However, now that we have some basic association chaining in place, you can also
 member = org.members.users.where(uuid: user.uuid).return(member: :member)
 ```
 
-## TODO
+## Roadmap
 
-* expand #where to accept arrays and ranges
-* QueryProxy#update_all (set property values on all matched nodes)
-* make relationship properties writable (currently only possible via custom Cypher queries)
+For 1.0:
+* [#2](https://github.com/upspring/neo4j_model.cr/issues/2) adjust API to align with [Granite](https://github.com/amberframework/granite)
+* [#3](https://github.com/upspring/neo4j_model.cr/issues/3) expand QueryProxy#where to accept arrays and ranges
+* [#4](https://github.com/upspring/neo4j_model.cr/issues/4) add QueryProxy#update_all (set property values on all matched nodes, skipping callbacks)
+* API to read/write relationship properties
+
+Future (help wanted):
 * more callbacks?
-* validations
 * migrations (to add constraints and indexes)
 * more specs
+* validations (via annotations?)
+* option to use an annotation to designate properties that should not be synchronized with database (in addition to existing leading _ convention)
 
 ## Contributing
 
