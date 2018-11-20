@@ -21,6 +21,7 @@ Features:
 * associations (has_one, has_many, belongs_to, belongs_to_many), chainable (e.g. actor.movies.genres)
 * scopes a la ActiveRecord
 * connection pooling ([#1](https://github.com/upspring/neo4j_model.cr/pull/1))
+* simple get/set/save interface to read and write relationship properties
 
 The provided association types do assume/impose a convention on the relationship direction, but I find it easier to think of relationships this way, rather than stick with Neo4j's required yet meaningless direction (the way ActiveNode does with the :in/:out parameter).
 
@@ -103,7 +104,6 @@ For 1.0:
 * [#2](https://github.com/upspring/neo4j_model.cr/issues/2) adjust API to align with [Granite](https://github.com/amberframework/granite)
 * [#3](https://github.com/upspring/neo4j_model.cr/issues/3) expand QueryProxy#where to accept arrays and ranges
 * [#4](https://github.com/upspring/neo4j_model.cr/issues/4) add QueryProxy#update_all (set property values on all matched nodes, skipping callbacks)
-* API to read/write relationship properties
 
 Future (help wanted):
 * more callbacks?

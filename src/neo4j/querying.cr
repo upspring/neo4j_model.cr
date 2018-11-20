@@ -52,11 +52,11 @@ module Neo4j
       query_as(obj_var)
     end
 
+    # clone the query, not the results
     def clone_for_chain
-      # clone the query, not the results
       new_query_proxy = self.class.new(@match, @create_merge, @ret)
       {% for var in [:label, :obj_variable_name, :rel_variable_name, :wheres, :sets, :order_bys, :skip, :limit] %}
-        new_query_proxy.{{var.id}} = @{{var.id}}
+        new_query_proxy.{{var.id}} = @{{var.id}}.dup
       {% end %}
 
       new_query_proxy
@@ -177,7 +177,7 @@ module Neo4j
         property uuid : String?
 
         @_objects = Array({{@type.id}}).new
-        @_rels = Array(Neo4j::Relationship).new
+        @_rels = Array(Relationship).new
 
         def initialize(@match = "MATCH ({{@type.id.underscore}}:#{{{@type.id}}.label})",
                        @ret = "RETURN {{@type.id.underscore}}") # all other parameters are added by chaining methods
@@ -256,7 +256,7 @@ module Neo4j
           { "#{obj_variable_name}.`#{prop}`", dir }
         end
 
-        def build_cypher_query
+        def build_cypher_query(var_name = obj_variable_name)
           @cypher_query = String.build do |cypher_query|
             cypher_query << @match
 
@@ -274,7 +274,7 @@ module Neo4j
               cypher_query << " SET "
               sets.each_with_index do |(str, params), index|
                 cypher_query << ", " if index > 0
-                cypher_query << "#{str} " + params.map { |k, v| v ? "#{obj_variable_name}.`#{k}` = $#{k}_s#{index}" : "#{obj_variable_name}.`#{k}` = NULL" }.join(", ")
+                cypher_query << "#{str} " + params.map { |k, v| v ? "#{var_name}.`#{k}` = $#{k}_s#{index}" : "#{var_name}.`#{k}` = NULL" }.join(", ")
                 params.each { |k, v| @cypher_params["#{k}_s#{index}"] = v if v }
               end
             end
@@ -291,8 +291,8 @@ module Neo4j
           Neo4jModel.settings.logger.debug "  with params: #{@cypher_params.inspect}"
         end
 
-        def execute
-          build_cypher_query
+        def execute(skip_build = false)
+          build_cypher_query unless skip_build
 
           start = Time.monotonic
           result = {{@type.id}}.with_connection(&.execute(@cypher_query, @cypher_params))
@@ -300,15 +300,15 @@ module Neo4j
           Neo4jModel.settings.logger.debug "Executed query (#{elapsed_ms}ms): #{result.type.inspect}"
 
           @_objects = Array({{@type.id}}).new
-          @_rels = Array(Neo4j::Relationship).new
+          @_rels = Array(Relationship).new
 
           result.each do |data|
-            if (node = data[0]?)
-              obj = {{@type.id}}.new(node.as(Neo4j::Node))
+            if (node = data[0]?.try &.as(Neo4j::Node))
+              obj = {{@type.id}}.new(node)
               @_objects << obj
-            end
-            if (rel = data[1]?)
-              @_rels << rel.as(Neo4j::Relationship)
+              if (rel = data[1]?.try &.as(Neo4j::Relationship))
+                @_rels << Relationship.new(rel, clone_for_chain.where(uuid: obj.uuid))
+              end
             end
           end
 

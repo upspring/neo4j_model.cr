@@ -32,7 +32,7 @@ module Neo4j
       # use leading underscore to indicate a property/ivar that should *not* be persisted to neo4j
       property _uuid : String = UUID.random.to_s # special because it is persisted on create, but never on update
       property _node : Neo4j::Node # snapshot of db node
-      property _rel : Neo4j::Relationship?
+      property _rel : Relationship?
 
       # override if you want to use a different label
       class_getter label : String = "{{@type.name}}"
