@@ -5,13 +5,17 @@ describe Neo4jModel do
     m = Movie.create(name: "Titanic", year: 1997)
     d = Director.create(name: "James Cameron")
 
+    m2 = Movie.create(name: "Aviator", year: 2004)
+    d2 = Director.create(name: "Martin Scorsese")
+    d2.movies << m2
+
     m.director = d # this should not take effect until save
     Movie.find!(m.uuid).director.should_not eq d
     Director.find!(d.uuid).movies.to_a.should_not contain m
 
     m.save
     Movie.find!(m.uuid).director.should eq d
-    Director.find!(d.uuid).movies.to_a.should contain m
+    Director.find!(d.uuid).movies.to_a.should eq [m]
 
     d.movies.delete(m)
     Movie.find!(m.uuid).director.should_not eq d
@@ -19,7 +23,7 @@ describe Neo4jModel do
 
     d.movies << m
     Movie.find!(m.uuid).director.should eq d
-    Director.find!(d.uuid).movies.to_a.should contain m
+    Director.find!(d.uuid).movies.to_a.should eq [m]
 
     m.director = nil
     m.save
@@ -31,17 +35,21 @@ describe Neo4jModel do
     m = Movie.create(name: "Titanic", year: 1997)
     g = Genre.create(name: "Romance")
 
+    m2 = Movie.create(name: "Aviator", year: 2004)
+    g2 = Genre.create(name: "Biography")
+    g2.movies << m2
+
     g.movies << m
-    Movie.find!(m.uuid).genres.to_a.should contain g
-    Genre.find!(g.uuid).movies.to_a.should contain m
+    Movie.find!(m.uuid).genres.to_a.should eq [g]
+    Genre.find!(g.uuid).movies.to_a.should eq [m]
 
     g.movies.delete(m)
     Movie.find!(m.uuid).genres.to_a.should_not contain g
     Genre.find!(g.uuid).movies.to_a.should_not contain m
 
     m.genres << g
-    Movie.find!(m.uuid).genres.to_a.should contain g
-    Genre.find!(g.uuid).movies.to_a.should contain m
+    Movie.find!(m.uuid).genres.to_a.should eq [g]
+    Genre.find!(g.uuid).movies.to_a.should eq [m]
 
     m.genres.delete(g)
     Movie.find!(m.uuid).genres.to_a.should_not contain g
@@ -52,13 +60,17 @@ describe Neo4jModel do
     actor = Actor.create(name: "Leonardo DiCaprio")
     agent = Agent.create(name: "Joe Smith")
 
+    actor2 = Actor.create(name: "Cate Blanchett")
+    agent2 = Agent.create(name: "Jane Smith")
+    agent2.actors << actor2
+
     actor.agent = agent # this should not take effect until save
     Actor.find!(actor.uuid).agent.should_not eq agent
     Agent.find!(agent.uuid).actors.to_a.should_not contain actor
 
     actor.save
     Actor.find!(actor.uuid).agent.should eq agent
-    Agent.find!(agent.uuid).actors.to_a.should contain actor
+    Agent.find!(agent.uuid).actors.to_a.should eq [actor]
 
     agent.actors.delete(actor)
     Actor.find!(actor.uuid).agent.should_not eq agent
@@ -66,7 +78,7 @@ describe Neo4jModel do
 
     agent.actors << actor
     Actor.find!(actor.uuid).agent.should eq agent
-    Agent.find!(agent.uuid).actors.to_a.should contain actor
+    Agent.find!(agent.uuid).actors.to_a.should eq [actor]
 
     actor.agent = nil
     actor.save

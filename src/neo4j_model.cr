@@ -4,7 +4,10 @@ require "./neo4j/validation"
 require "./neo4j/callbacks"
 require "./neo4j/querying"
 require "./neo4j/scopes"
-require "./neo4j/associations"
+require "./neo4j/associations/belongs_to"
+require "./neo4j/associations/has_many"
+require "./neo4j/associations/has_one"
+require "./neo4j/associations/belongs_to_many"
 
 # TODO: Write documentation for `Neo4jModel`
 module Neo4jModel
