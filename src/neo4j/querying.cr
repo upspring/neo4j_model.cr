@@ -294,25 +294,32 @@ module Neo4j
         def execute(skip_build = false)
           build_cypher_query unless skip_build
 
-          start = Time.monotonic
-          result = {{@type.id}}.with_connection(&.execute(@cypher_query, @cypher_params))
-          elapsed_ms = (Time.monotonic - start).milliseconds
-          Neo4jModel.settings.logger.debug "Executed query (#{elapsed_ms}ms): #{result.type.inspect}"
+          res : Neo4j::Result? = nil
 
-          @_objects = Array({{@type.id}}).new
-          @_rels = Array(Relationship).new
-
-          result.each do |data|
-            if (node = data[0]?.try &.as(Neo4j::Node))
-              obj = {{@type.id}}.new(node)
-              @_objects << obj
-              if (rel = data[1]?.try &.as(Neo4j::Relationship))
-                @_rels << Relationship.new(rel, clone_for_chain.where(uuid: obj.uuid))
-              end
-            end
+          {{@type.id}}.with_connection do |conn|
+            elapsed_ms = Time.measure { res = conn.execute(@cypher_query, @cypher_params) }.milliseconds
+            Neo4jModel.settings.logger.debug "Executed query (#{elapsed_ms}ms): #{res.not_nil!.type.inspect}"
+          rescue ex : Neo4j::QueryException
+            conn.reset
+            raise ex
           end
 
-          @_executed = true # FIXME - needs error checking
+          if (result = res)
+            @_objects = Array({{@type.id}}).new
+            @_rels = Array(Relationship).new
+
+            result.each do |data|
+              if (node = data[0]?.try &.as(Neo4j::Node))
+                obj = {{@type.id}}.new(node)
+                @_objects << obj
+                if (rel = data[1]?.try &.as(Neo4j::Relationship))
+                  @_rels << Relationship.new(rel, clone_for_chain.where(uuid: obj.uuid))
+                end
+              end
+            end
+
+            @_executed = true # FIXME - needs error checking
+          end
 
           self
         end
