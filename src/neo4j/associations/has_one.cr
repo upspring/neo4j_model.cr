@@ -11,23 +11,23 @@ module Neo4j
       class QueryProxy
         # QueryProxy instance method, for chaining
         # FIXME: just adding 's' to pluralize is not always right
-        def {{name}}s : {{klass.id}}::QueryProxy
-          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})-[r:{{rel_type.id}}]->({{name}}:#{{{klass.id}}.label})",
-                                               "RETURN {{name}}, r").query_as(:{{name}})
+        def {{name}}s(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r) : {{klass.id}}::QueryProxy
+          proxy = {{klass.id}}::QueryProxy.new("MATCH (#{obj_variable_name}:#{label})-[#{assoc_rel_variable_name}:{{rel_type.id}}]->(#{assoc_obj_variable_name}:#{{{klass.id}}.label})",
+                                               "RETURN #{assoc_obj_variable_name}, #{assoc_rel_variable_name}").query_as(assoc_obj_variable_name, assoc_rel_variable_name)
           self.chain proxy
         end
 
         # QueryProxy instance method, for normal use (returns object)
-        def {{name}} : {{klass.id}}?
-          {{name}}s.first_with_rel?
+        def {{name}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r) : {{klass.id}}?
+          {{name}}s(assoc_obj_variable_name, assoc_rel_variable_name).first_with_rel?
         end
       end
 
       # FIXME: just adding 's' to pluralize is not always right
       # instance method, to start a chained query
-      def {{name}}s
+      def {{name}}s(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r)
         # create a proxy for all queries related to this association
-        proxy = QueryProxy.new.{{name}}s
+        proxy = QueryProxy.new.{{name}}s(assoc_obj_variable_name, assoc_rel_variable_name)
 
         # this is the beginning of the chain, should start with a uuid match (provided by #query_proxy)
         context = query_proxy
@@ -35,8 +35,8 @@ module Neo4j
       end
 
       # instance method, for normal use (returns object)
-      def {{name}}
-        {{name}}s.first_with_rel?
+      def {{name}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r)
+        {{name}}s(assoc_obj_variable_name, assoc_rel_variable_name).first_with_rel?
       end
 
       def {{name}}=(target : {{klass.id}}?)

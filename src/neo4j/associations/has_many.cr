@@ -10,16 +10,16 @@ module Neo4j
 
       class QueryProxy
         # QueryProxy instance method, for chaining
-        def {{name}} : {{klass.id}}::QueryProxy
-          proxy = {{klass.id}}::QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})-[r:{{rel_type.id}}]->({{name}}:#{{{klass.id}}.label})",
-                                               "RETURN {{name}}, r").query_as(:{{name}})
+        def {{name}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r) : {{klass.id}}::QueryProxy
+          proxy = {{klass.id}}::QueryProxy.new("MATCH (#{obj_variable_name}:#{label})-[#{assoc_rel_variable_name}:{{rel_type.id}}]->(#{assoc_obj_variable_name}:#{{{klass.id}}.label})",
+                                               "RETURN #{assoc_obj_variable_name}, #{assoc_rel_variable_name}").query_as(assoc_obj_variable_name, assoc_rel_variable_name)
           self.chain proxy
         end
       end
 
       # instance method, either to start a chained query or to do regular operations (list, add/delete)
-      def {{name}}
-        proxy = QueryProxy.new.{{name}}
+      def {{name}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r)
+        proxy = QueryProxy.new.{{name}}(assoc_obj_variable_name, assoc_rel_variable_name)
 
         # while we have the proper context (label & uuid), generate queries to add and remove relationships
         proxy.add_proxy = {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: $target_uuid})",

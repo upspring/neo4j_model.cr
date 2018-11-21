@@ -42,12 +42,12 @@ module Neo4j
     # TODO: want to expose #query_as as part of public api, but would first need to do
     #       some find/replace magic on existing match/create_merge/wheres/ret
     # NOTE: ActiveNode called this .as, but crystal doesn't allow that name
-    protected def query_as(obj_var : (Symbol | String))
+    def query_as(obj_var : (Symbol | String))
       @obj_variable_name = obj_var.to_s
       self
     end
 
-    protected def query_as(obj_var : (Symbol | String), rel_var : (Symbol | String))
+    def query_as(obj_var : (Symbol | String), rel_var : (Symbol | String))
       @rel_variable_name = rel_var.to_s
       query_as(obj_var)
     end
@@ -481,7 +481,8 @@ module Neo4j
         if (proxy = @_query_proxy)
           return proxy
         end
-        proxy = QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label} {uuid: '#{uuid}'})", "RETURN {{@type.id.underscore}}").query_as(:{{@type.id.underscore}})
+        proxy = QueryProxy.new("MATCH ({{@type.id.underscore}}:#{label})", "RETURN {{@type.id.underscore}}").query_as(:{{@type.id.underscore}})
+        proxy.where(uuid: uuid)
         proxy.uuid = uuid
         @_query_proxy = proxy
       end
