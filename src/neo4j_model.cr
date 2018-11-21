@@ -12,7 +12,7 @@ require "./neo4j/associations/belongs_to_many"
 
 # TODO: Write documentation for `Neo4jModel`
 module Neo4jModel
-  VERSION = "0.7.0"
+  VERSION = "0.7.1"
 
   class Settings
     property logger : Logger
