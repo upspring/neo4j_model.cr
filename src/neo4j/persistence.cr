@@ -67,10 +67,10 @@ module Neo4j
               end
             {% elsif var.type <= Integer || (var.type.union? && (var.type.union_types.includes?(Int8) || var.type.union_types.includes?(Int16) || var.type.union_types.includes?(Int32) || var.type.union_types.includes?(Int64))) %}
               if (val = hash["{{var}}"]?)
-                if val.is_a?(Int)
+                if val.is_a?(Integer)
                   self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
                 elsif val.is_a?(String)
-                  self.{{var}} = hash["{{var}}"].as(String).to_i
+                  self.{{var}} = hash["{{var}}"].as(String).to_i?
                 end
               end
             {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
