@@ -85,16 +85,16 @@ module Neo4j
               if (val = hash["{{var}}"]?)
                 if val.is_a?(Array)
                   self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
-                else
-                  # FIXME: interpret string values?
+                elsif val.is_a?(String)
+                  self.{{var}} = Array(String).from_json(val)
                 end
               end
             {% elsif var.type <= Hash(String, String) || (var.type.union? && var.type.union_types.includes?(Hash(String, String))) %}
               if (val = hash["{{var}}"]?)
                 if val.is_a?(Hash)
                   self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
-                else
-                  # FIXME: interpret string values?
+                elsif val.is_a?(String)
+                  self.{{var}} = Hash(String, String).from_json(val)
                 end
               end
             {% elsif var.type <= String || (var.type.union? && var.type.union_types.includes?(String)) %}
