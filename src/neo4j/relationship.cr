@@ -16,6 +16,10 @@ module Neo4j
           properties[prop.to_s]?
         end
 
+        def get_i(prop : String | Symbol)
+          properties[prop.to_s]?.try &.as?(Int)
+        end
+
         def set(prop : String | Symbol, val : Neo4j::Type)
           properties[prop.to_s] = val
         end
