@@ -2,7 +2,7 @@ require "json"
 require "neo4j"
 require "./neo4j/base"
 require "./neo4j/persistence"
-require "./neo4j/undeclared_attributes"
+require "./neo4j/undeclared_properties"
 require "./neo4j/validation"
 require "./neo4j/callbacks"
 require "./neo4j/querying"
@@ -15,7 +15,7 @@ require "./neo4j/associations/belongs_to_many"
 
 # TODO: Write documentation for `Neo4jModel`
 module Neo4jModel
-  VERSION = "0.7.1"
+  VERSION = "0.8.0"
 
   class Settings
     property logger : Logger
