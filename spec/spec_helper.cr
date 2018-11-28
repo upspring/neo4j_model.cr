@@ -16,7 +16,7 @@ class Movie
   belongs_to_many Genre, rel_type: :includes
   belongs_to_many Actor, rel_type: :acted_in
 
-  property name : String?
+  property name : String = "" # make sure we can create non-nilable properties as long as they have default values
   property year : Integer?
 
   property created_at : Time? = Time.utc_now

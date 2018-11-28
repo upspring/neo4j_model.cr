@@ -37,12 +37,21 @@ module Neo4j
           self.{{var}} = Time.unix(node.properties["{{var}}"].as(Int))
         {% elsif var.type <= Bool || (var.type.union? && var.type.union_types.includes?(Bool)) %}
           val = node.properties["{{var}}"]
-          self.{{var}} = val.nil? ? nil : val.as(Bool)
+          if val.nil?
+            {% if var.type.union? && var.type.union_types.includes?(Nil) %}
+              self.{{var}} = nil
+            {% end %}
+          else
+            self.{{var}} = val.as(Bool)
+          end
         {% else %}
           self.{{var}} = node.properties["{{var}}"].as(typeof(@{{var}}))
         {% end %}
       else
-        self.{{var}} = nil
+        # set to nil ONLY IF property type includes Nil
+        {% if var.type.union? && var.type.union_types.includes?(Nil) %}
+          self.{{var}} = nil
+        {% end %}
       end
       {% end %}
 
@@ -53,7 +62,10 @@ module Neo4j
       {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
         if hash.has_key?("{{var}}")
           if hash["{{var}}"].nil?
-            self.{{var}} = nil
+            # set to nil ONLY IF property type includes Nil
+            {% if var.type.union? && var.type.union_types.includes?(Nil) %}
+              self.{{var}} = nil
+            {% end %}
           else
             {% if var.type <= Bool || (var.type.union? && var.type.union_types.includes?(Bool)) %}
               if (val = hash["{{var}}"]?)
@@ -70,7 +82,14 @@ module Neo4j
                 if val.is_a?(Integer)
                   self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
                 elsif val.is_a?(String)
-                  self.{{var}} = hash["{{var}}"].as(String).to_i?
+                  val = hash["{{var}}"].as(String).to_i?
+                  if val.nil?
+                    {% if var.type.union? && var.type.union_types.includes?(Nil) %}
+                      self.{{var}} = nil
+                    {% end %}
+                  else
+                    self.{{var}} = val
+                  end
                 end
               end
             {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
