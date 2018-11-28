@@ -44,4 +44,47 @@ describe Neo4jModel do
     m.created_at.not_nil!.year.should be > 2001
     m.updated_at.not_nil!.year.should be > 2001
   end
+
+  it "should get/set undeclared String, Int and Bool properties via hash" do
+    m = Movie.create(name: "Titanic", year: 1997)
+    m["str"] = "asdf"
+    m["int"] = 123
+    m["bool"] = true
+
+    # should work immediately...
+    m["str"].should eq "asdf"
+    m["int"].as(Int).should eq 123
+    m["bool"].as(Bool).should be_true
+    m.get_i("int").should eq 123
+    m.get_bool("bool").should be_true
+
+    # ... as well as after a save/find cycle
+    m.save
+    m = Movie.find!(m.uuid)
+    m["str"].should eq "asdf"
+    m["int"].as(Int).should eq 123
+    m["bool"].as(Bool).should be_true
+    m.get_i("int").should eq 123
+    m.get_bool("bool").should be_true
+  end
+
+  # it "should get/set undeclared String, Int and Bool properties via hash" do
+  #   m = Movie.create(name: "Titanic", year: 1997)
+  #   m.update_properties("str" => "asdf", "int" => 123, "bool" => true)
+  #   m["str"].should eq "asdf"
+  #   m["int"].as(Int).should eq 123
+  #   m["bool"].as(Bool).should be_true
+  #   m.get_i("int").should eq 123
+  #   m.get_bool("bool").should be_true
+  # end
+
+  # it "should get/set undeclared String, Int and Bool properties via named tuple" do
+  #   m = Movie.create(name: "Titanic", year: 1997)
+  #   m.update_properties("str" => "asdf", "int" => 123, "bool" => true)
+  #   m["str"].should eq "asdf"
+  #   m["int"].as(Int).should eq 123
+  #   m["bool"].as(Bool).should be_true
+  #   m.get_i("int").should eq 123
+  #   m.get_bool("bool").should be_true
+  # end
 end

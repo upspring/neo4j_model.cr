@@ -1,5 +1,3 @@
-require "neo4j"
-
 module Neo4j
   # works with a very simplified model of Cypher (MATCH, WHEREs, ORDER BYs, SKIP, LIMIT, RETURN)
   class QueryProxy
@@ -300,6 +298,7 @@ module Neo4j
             elapsed_ms = Time.measure { res = conn.execute(@cypher_query, @cypher_params) }.milliseconds
             Neo4jModel.settings.logger.debug "Executed query (#{elapsed_ms}ms): #{res.not_nil!.type.inspect}"
           rescue ex : Neo4j::QueryException
+             # this shouldn't happen anymore, but... leaving it here just in case
             conn.reset
             raise ex
           end

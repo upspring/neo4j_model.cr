@@ -1,6 +1,3 @@
-require "neo4j"
-require "json"
-
 module Neo4j
   module Model
     # supported property types (could expand in the future)
@@ -15,7 +12,7 @@ module Neo4j
     alias Changeset = NamedTuple(old_value: Neo4j::Type, new_value: Neo4j::Type)
 
     macro included
-      property _changes = Hash(Symbol, Changeset).new
+      property _changes = Hash(String | Symbol, Changeset).new
     end
 
     def persisted?
@@ -122,7 +119,7 @@ module Neo4j
               end
             {% elsif var.type <= String || (var.type.union? && var.type.union_types.includes?(String)) %}
               if hash.has_key?("{{var}}")
-                self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+                self.{{var}} = hash["{{var}}"].to_s
               end
             {% end %}
           end
@@ -198,6 +195,12 @@ module Neo4j
         end
         {% end %}
       {% end %}
+
+      _undeclared_properties.each do |k, v|
+        if (old_value = @_node.properties[k]?) != (new_value = v)
+          @_changes[k] = {old_value: old_value, new_value: new_value}
+        end
+      end
 
       # then persist changeset to database
       @_changes.reject!(:created_at)                   # reject changes to created_at once set

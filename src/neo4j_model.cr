@@ -1,5 +1,8 @@
+require "json"
+require "neo4j"
 require "./neo4j/base"
 require "./neo4j/persistence"
+require "./neo4j/undeclared_attributes"
 require "./neo4j/validation"
 require "./neo4j/callbacks"
 require "./neo4j/querying"

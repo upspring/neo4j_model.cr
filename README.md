@@ -11,7 +11,7 @@ The goal is a stable and full-featured Neo4j ORM for Crystal. Currently Bolt-onl
 
 Features:
 
-* map Crystal properties to Neo4j node properties
+* map Crystal properties to Neo4j node properties (also allows arbitrary undeclared properties via [] and []=)
 * timestamps: sets created_at property on create and updated_at property on save (if present)
 * new, save, reload
 * find, limit/skip, order, where (currently exact matches only, will add support for arrays and ranges)
@@ -21,7 +21,7 @@ Features:
 * associations (has_one, has_many, belongs_to, belongs_to_many), chainable (e.g. actor.movies.genres)
 * scopes a la ActiveRecord
 * connection pooling ([#1](https://github.com/upspring/neo4j_model.cr/pull/1))
-* simple get/set/save interface to read and write relationship properties
+* simple []/[]=/save interface to read and write relationship properties (similar to undeclared properties)
 
 The provided association types do assume/impose a convention on the relationship direction, but I find it easier to think of relationships this way, rather than stick with Neo4j's required yet meaningless direction (the way ActiveNode does with the :in/:out parameter).
 
@@ -105,12 +105,12 @@ For 1.0:
 * [#3](https://github.com/upspring/neo4j_model.cr/issues/3) expand QueryProxy#where to accept arrays and ranges
 * [#4](https://github.com/upspring/neo4j_model.cr/issues/4) add QueryProxy#update_all (set property values on all matched nodes, skipping callbacks)
 
-Future (help wanted):
+Future (help wanted!)
 * more callbacks?
 * migrations (to add constraints and indexes)
 * more specs
 * validations (via annotations?)
-* option to use an annotation to designate properties that should not be synchronized with database (in addition to existing leading _ convention)
+* option to use an annotation to designate properties that should not be synchronized with database (in addition to existing leading underscore convention)
 
 ## Contributing
 
