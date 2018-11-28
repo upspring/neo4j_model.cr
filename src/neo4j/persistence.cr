@@ -30,9 +30,13 @@ module Neo4j
       {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
       if node.properties.has_key?("{{var}}")
         {% if var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
-          self.{{var}} = JSON.parse(node.properties["{{var}}"].as(String)).as_a?.try &.map(&.as_s)
+          if (array = JSON.parse(node.properties["{{var}}"].as(String)).as_a?)
+            self.{{var}} = array.map(&.as_s)
+          end
         {% elsif var.type <= Hash(String, String) || (var.type.union? && var.type.union_types.includes?(Hash(String, String))) %}
-          self.{{var}} = JSON.parse(node.properties["{{var}}"].as(String)).as_h?.try &.map { |_k, v| v.as_s }
+          if (hash = JSON.parse(node.properties["{{var}}"].as(String)).as_h?)
+            self.{{var}} = hash.transform_values { |v| v.to_s }
+          end
         {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
           self.{{var}} = Time.unix(node.properties["{{var}}"].as(Int))
         {% elsif var.type <= Bool || (var.type.union? && var.type.union_types.includes?(Bool)) %}
@@ -170,19 +174,19 @@ module Neo4j
       end
 
       {% for var in @type.instance_vars.reject { |v| v.id =~ /^_/ || v.id =~ /_ids?$/ } %}
-        {% if var.type <= Array || (var.type.union? && var.type.union_types.includes?(Array)) %}
+        {% if var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
         if (old_value = @_node.properties["{{var}}"]?) != (new_value = @{{var}}.to_json)
           @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
         end
-        {% elsif var.type <= Hash || (var.type.union? && var.type.union_types.includes?(Hash)) %}
-        hash_with_string_keys = {} of String => Type
-        @{{var}}.each { |key, value| hash_with_string_keys[key.to_s] = value }
-        if (old_value = @_node.properties["{{var}}"]?) != (new_value = hash_with_string_keys.to_json)
-          @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
+        {% elsif var.type <= Hash(String, String) || (var.type.union? && var.type.union_types.includes?(Hash(String, String))) %}
+        if (new_hash = @{{var}})
+          if (old_value = @_node.properties["{{var}}"]?) != (new_value = new_hash.to_json)
+            @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
+          end
         end
         {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
-        if (local_var = @{{var}}) # remember, this type of guard doesn't work with instance vars, need to snapshot to local var
-          if (old_value = @_node.properties["{{var}}"]?) != (new_value = local_var.to_unix)
+        if (new_time = @{{var}})
+          if (old_value = @_node.properties["{{var}}"]?) != (new_value = new_time.to_unix)
             @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
           end
         elsif (old_value = @_node.properties["{{var}}"]?) != (new_value = nil)

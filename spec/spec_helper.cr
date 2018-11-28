@@ -19,6 +19,10 @@ class Movie
   property name : String = "" # make sure we can create non-nilable properties as long as they have default values
   property year : Integer?
 
+  # help wanted: come up with more plausible example properties
+  property example_array : Array(String)?
+  property example_hash : Hash(String, String)?
+
   property created_at : Time? = Time.utc_now
   property updated_at : Time? = Time.utc_now
 end
