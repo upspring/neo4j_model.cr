@@ -24,4 +24,23 @@ describe Neo4jModel do
     n = Movie.create(name: "The Aviator", year: 2004)
     Movie.count.should eq 2
   end
+
+  it "supports set_label queries" do
+    m = Movie.create(name: "Titanic")
+    Movie.count.should eq 1
+    Director.count.should eq 0
+    Movie.where(name: "Titanic").set_label(:Director).execute
+    Director.count.should eq 1
+    Movie.count.should eq 1
+  end
+
+  it "supports remove_label queries" do
+    m = Movie.create(name: "Titanic")
+    Movie.where(name: "Titanic").set_label(:Director).execute
+    Director.count.should eq 1
+    Movie.count.should eq 1
+    Movie.where(name: "Titanic").remove_label(:Movie).execute
+    Director.count.should eq 1
+    Movie.count.should eq 0
+  end
 end

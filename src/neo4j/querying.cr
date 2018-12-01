@@ -21,6 +21,7 @@ module Neo4j
     property wheres = Array(ExpandedWhere).new
     property create_merge = ""
     property sets = Array(Tuple(String, ParamsHash)).new
+    property removes = Array(String).new
     property order_bys = Array(Tuple((Symbol | String), SortDirection)).new
     property skip = 0
     property limit = 500 # relatively safe default value; adjust appropriately
@@ -53,7 +54,7 @@ module Neo4j
     # clone the query, not the results
     def clone_for_chain
       new_query_proxy = self.class.new(@match, @create_merge, @ret)
-      {% for var in [:label, :obj_variable_name, :rel_variable_name, :wheres, :sets, :order_bys, :skip, :limit] %}
+      {% for var in [:label, :obj_variable_name, :rel_variable_name, :wheres, :sets, :removes, :order_bys, :skip, :limit] %}
         new_query_proxy.{{var.id}} = @{{var.id}}.dup
       {% end %}
 
@@ -214,9 +215,14 @@ module Neo4j
           end
         end
 
-        # FIXME: somewhat confusingly named since we also have a property called label
-        def set_label(label : String)
-          @sets << { "n:#{label}", ParamsHash.new }
+        # somewhat confusingly named since we also have a property called label, but not sure how we could do better
+        def set_label(label : Symbol | String)
+          @sets << { "#{obj_variable_name}:#{label.to_s}", ParamsHash.new }
+          clone_for_chain
+        end
+
+        def remove_label(label : Symbol | String)
+          @removes << "#{obj_variable_name}:#{label.to_s}"
           clone_for_chain
         end
 
@@ -274,6 +280,14 @@ module Neo4j
                 cypher_query << ", " if index > 0
                 cypher_query << "#{str} " + params.map { |k, v| v ? "#{var_name}.`#{k}` = $#{k}_s#{index}" : "#{var_name}.`#{k}` = NULL" }.join(", ")
                 params.each { |k, v| @cypher_params["#{k}_s#{index}"] = v if v }
+              end
+            end
+
+            if removes.any?
+              cypher_query << " REMOVE "
+              removes.each_with_index do |str, index|
+                cypher_query << ", " if index > 0
+                cypher_query << "#{str} "
               end
             end
 
