@@ -12,8 +12,11 @@ module Neo4j
     @_executed : Bool = false
 
     # expose query building properties to make debugging easier
-    property cypher_query : String?
-    property cypher_params = Hash(String, Neo4j::Type).new
+    getter cypher_query : String?
+    getter cypher_params = Hash(String, Neo4j::Type).new
+    getter raw_result : Neo4j::Result?
+    getter return_values = Array(Hash(String, Neo4j::Type)).new
+
     property obj_variable_name : String = "n"
     property rel_variable_name : String = "r"
 
@@ -306,28 +309,37 @@ module Neo4j
         def execute(skip_build = false)
           build_cypher_query unless skip_build
 
-          res : Neo4j::Result? = nil
-
           {{@type.id}}.with_connection do |conn|
-            elapsed_ms = Time.measure { res = conn.execute(@cypher_query, @cypher_params) }.milliseconds
-            Neo4jModel.settings.logger.debug "Executed query (#{elapsed_ms}ms): #{res.not_nil!.type.inspect}"
+            elapsed_ms = Time.measure { @raw_result = conn.execute(@cypher_query, @cypher_params) }.milliseconds
+            Neo4jModel.settings.logger.debug "Executed query (#{elapsed_ms}ms): #{raw_result.not_nil!.type.inspect}"
           rescue ex : Neo4j::QueryException
              # this shouldn't happen anymore, but... leaving it here just in case
             conn.reset
             raise ex
           end
 
-          if (result = res)
+          if (result = raw_result)
             @_objects = Array({{@type.id}}).new
             @_rels = Array(Relationship).new
+            @return_values.clear
+            fields = Array(String).new
+
+            if (type = result.type.as?(Neo4j::Success))
+              fields = type.fields
+            end
 
             result.each do |data|
-              if (node = data[0]?.try &.as(Neo4j::Node))
-                obj = {{@type.id}}.new(node)
-                @_objects << obj
-                if (rel = data[1]?.try &.as(Neo4j::Relationship))
-                  @_rels << Relationship.new(rel, clone_for_chain.where(uuid: obj.uuid))
+              if (fields == [obj_variable_name.to_s, rel_variable_name.to_s]) || # the most common case
+                 (fields == [obj_variable_name.to_s])                            # the next most common case
+                if (node = data[0]?.try &.as?(Neo4j::Node))
+                  obj = {{@type.id}}.new(node)
+                  @_objects << obj
+                  if (rel = data[1]?.try &.as?(Neo4j::Relationship))
+                    @_rels << Relationship.new(rel, clone_for_chain.where(uuid: obj.uuid))
+                  end
                 end
+              else # something a little bit more complex... user will sort it out :-D
+                @return_values << Hash.zip(fields, data)
               end
             end
 
