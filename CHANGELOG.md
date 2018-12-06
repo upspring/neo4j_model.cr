@@ -4,7 +4,8 @@ Arranged in reverse chronological order (latest changes on top).
 
 ## Unreleased
 
-* Nothing yet.
+* Added support for arbitrary queries with arbitrary return values (some assembly required)
+* Added QueryProxy#set_label
 
 ## v0.8.0 - 2018-11-28
 

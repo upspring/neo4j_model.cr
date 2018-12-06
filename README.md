@@ -22,6 +22,7 @@ Features:
 * scopes a la ActiveRecord
 * connection pooling ([#1](https://github.com/upspring/neo4j_model.cr/pull/1))
 * simple []/[]=/save interface to read and write relationship properties (similar to undeclared properties)
+* set_label/remove_label
 
 The provided association types do assume/impose a convention on the relationship direction, but I find it easier to think of relationships this way, rather than stick with Neo4j's required yet meaningless direction (the way ActiveNode does with the :in/:out parameter).
 
@@ -88,7 +89,7 @@ end
 Including Neo4j::Model creates an embedded QueryProxy class that you can call directly as needed to run queries not yet supported by the query builder. For example, if Members are nested under both Organization and User and you need to check both, you could do this:
 
 ```crystal
-proxy = Member::QueryProxy.new("MATCH (o:Organization)-->(m:Member), (u:User)-->(m:Member)", "RETURN m")
+proxy = Member::QueryProxy.new("MATCH (o:Organization)-->(m:Member)<--(u:User)", "RETURN m").query_as(:m)
 member = proxy.where("o.uuid = $o_uuid AND u.uuid = $u_uuid", o_uuid: org.uuid, u_uuid: user.uuid).limit(1).first?
 ```
 
