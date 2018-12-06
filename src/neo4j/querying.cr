@@ -1,9 +1,10 @@
 module Neo4j
   # works with a very simplified model of Cypher (MATCH, WHEREs, ORDER BYs, SKIP, LIMIT, RETURN)
   class QueryProxy
-    alias ParamsHash = Hash((Symbol | String), Neo4j::Type)
+    alias ParamsHash = Hash(Symbol | String, Neo4j::Type)
+    alias CypherParamsHash = Hash(String, Neo4j::Type)
     alias Where = Tuple(String, String, ParamsHash)
-    alias ExpandedWhere = Tuple(String, Hash(String, Neo4j::Type))
+    alias ExpandedWhere = Tuple(String, CypherParamsHash)
     enum SortDirection
       ASC
       DESC
@@ -13,9 +14,9 @@ module Neo4j
 
     # expose query building properties to make debugging easier
     getter cypher_query : String?
-    getter cypher_params = Hash(String, Neo4j::Type).new
+    getter cypher_params = CypherParamsHash.new
     getter raw_result : Neo4j::Result?
-    getter return_values = Array(Hash(String, Neo4j::Type)).new
+    getter return_values = Array(CypherParamsHash).new
 
     property obj_variable_name : String = "n"
     property rel_variable_name : String = "r"
@@ -67,7 +68,13 @@ module Neo4j
     # NamedTuple does not have .each_with_object
     private def params_hash_from_named_tuple(params)
       new_hash = ParamsHash.new
-      params.each { |k, v| new_hash[k] = v }
+      params.each do |k, v|
+        if v.is_a?(Array) # not entirely sure why this is needed (but it is)
+          new_hash[k] = v.map { |val| val.as(Neo4j::Type) }
+        else
+          new_hash[k] = v
+        end
+      end
       new_hash
     end
 
@@ -101,7 +108,7 @@ module Neo4j
       clone_for_chain
     end
 
-    def set(params : ParamsHash)
+    def set(params)
       @sets << {"", params_hash_from_named_tuple(params)}
       clone_for_chain
     end
@@ -235,7 +242,7 @@ module Neo4j
           str, not, params = where
           index = wheres.size + 1
 
-          new_params = Hash(String, Neo4j::Type).new
+          new_params = CypherParamsHash.new
           expanded_str = String.build do |cypher_query|
             cypher_query << "NOT " if not != ""
             cypher_query << "("
@@ -243,8 +250,13 @@ module Neo4j
             if str == ""
               cypher_query << params.map { |k, v|
                 if v
-                  new_params["#{k}_w#{index}"] = v
-                  "(#{obj_variable_name}.`#{k}` = $#{k}_w#{index})"
+                  if v.is_a?(Array)
+                    new_params["#{k}_w#{index}"] = v
+                    "(#{obj_variable_name}.`#{k}` IN $#{k}_w#{index})"
+                  else
+                    new_params["#{k}_w#{index}"] = v
+                    "(#{obj_variable_name}.`#{k}` = $#{k}_w#{index})"
+                  end
                 else
                   "(#{obj_variable_name}.`#{k}` IS NULL)"
                 end

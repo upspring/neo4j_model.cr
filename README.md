@@ -14,7 +14,7 @@ Features:
 * map Crystal properties to Neo4j node properties (also allows arbitrary undeclared properties via [] and []=)
 * timestamps: sets created_at property on create and updated_at property on save (if present)
 * new, save, reload
-* find, limit/skip, order, where (currently exact matches only, will add support for arrays and ranges)
+* find, limit/skip, order, where (exact matches and arrays; considering adding support for ranges)
 * convenience finders: find_by, find_or_initialize_by, find_or_create_by
 * callbacks: before/after save, before/after validation - note: callbacks must return true to continue
 * query proxy to allow method chaining (query is not executed until you call `#to_a`, `#count`, or try to access a record)
@@ -24,7 +24,7 @@ Features:
 * simple []/[]=/save interface to read and write relationship properties (similar to undeclared properties)
 * set_label/remove_label
 
-The provided association types do assume/impose a convention on the relationship direction, but I find it easier to think of relationships this way, rather than stick with Neo4j's required yet meaningless direction (the way ActiveNode does with the :in/:out parameter).
+The provided association types do impose a convention on the relationship direction (biased toward active verbs), but I find it easier to think of relationships this way, rather than stick with Neo4j's required yet meaningless direction (the way ActiveNode does with the :in/:out parameter).
 
 ## Installation
 

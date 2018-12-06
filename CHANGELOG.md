@@ -2,8 +2,9 @@
 
 Arranged in reverse chronological order (latest changes on top).
 
-## Unreleased
+## v0.9.0 (unreleased)
 
+* Added support for WHERE IN queries with array param
 * Added support for arbitrary queries with arbitrary return values (some assembly required)
 * Added QueryProxy#set_label
 
