@@ -97,7 +97,7 @@ describe Neo4jModel do
     genres.map(&.name).compact.sort.should eq ["Animation", "Biography", "Romance"]
   end
 
-  it "should support DISTINCT return values" do
+  it "should support DISTINCT return values and counts" do
     m = Movie.create(name: "Titanic", year: 1998)
     m2 = Movie.create(name: "Aviator", year: 2004)
 
@@ -110,7 +110,15 @@ describe Neo4jModel do
 
     genres = Movie.all.genres.execute
     genres.to_a.map(&.name).compact.sort.should eq ["Biography", "Romance", "Romance"]
+
+    Movie.all.genres.count.should eq 3
+
     genres = Movie.all.genres.distinct.execute
     genres.to_a.map(&.name).compact.sort.should eq ["Biography", "Romance"]
+
+    Movie.all.genres.distinct.count.should eq 2
+
+    # generated query should ignore the order bys
+    Movie.all.genres.order(:name).distinct.count.should eq 2
   end
 end

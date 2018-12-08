@@ -159,7 +159,6 @@ module Neo4j
     end
 
     def distinct
-      puts "QueryProxy#distinct"
       @ret_distinct = true
       clone_for_chain
     end
@@ -315,14 +314,15 @@ module Neo4j
 
             if @ret != ""
               if @ret_distinct
+                # DISTINCT doesn't do what we typically want when there are multiple return values
                 # cypher_query << " #{@ret.gsub(obj_variable_name, "DISTINCT #{obj_variable_name}")}"
-                cypher_query << " RETURN DISTINCT #{obj_variable_name}"
+                cypher_query << " #{@ret.gsub(/,.*?$/, "").gsub(obj_variable_name, "DISTINCT #{obj_variable_name}")}"
               else
                 cypher_query << " #{@ret}"
               end
             end
 
-            if @create_merge == "" && @ret !~ /delete/i
+            if @create_merge == "" && @ret !~ /delete/i && @ret !~ /count/i
               cypher_query << " ORDER BY " + @order_bys.map { |(prop, dir)| "#{prop} #{dir.to_s}" }.join(", ") if @order_bys.any?
               cypher_query << " SKIP #{@skip} LIMIT #{@limit}"
             end
@@ -375,10 +375,11 @@ module Neo4j
           self
         end
 
-        def execute_count
-          build_cypher_query
-
+        def count
+          orig_ret, @ret = @ret, "RETURN COUNT(#{obj_variable_name})"
           count : Integer = 0
+
+          build_cypher_query
 
           {{@type.id}}.with_connection do |conn|
             conn.execute(@cypher_query, @cypher_params).each do |result|
@@ -390,15 +391,9 @@ module Neo4j
             end
           end
 
-          count
-        end
-
-        def count
-          orig_ret, @ret = @ret, "RETURN COUNT(#{obj_variable_name})"
-          val = execute_count
           @ret = orig_ret
 
-          val
+          count
         end
 
         def delete_all
