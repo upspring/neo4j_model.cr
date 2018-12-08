@@ -30,6 +30,7 @@ module Neo4j
     property skip = 0
     property limit = 500 # relatively safe default value; adjust appropriately
     property ret = ""    # note: destroy uses this to DETACH DELETE instead of RETURN
+    property ret_distinct : Bool = false
 
     # for associations
     property add_proxy : QueryProxy?
@@ -58,7 +59,7 @@ module Neo4j
     # clone the query, not the results
     def clone_for_chain
       new_query_proxy = self.class.new(@match, @create_merge, @ret)
-      {% for var in [:label, :obj_variable_name, :rel_variable_name, :wheres, :sets, :removes, :order_bys, :skip, :limit] %}
+      {% for var in [:label, :obj_variable_name, :rel_variable_name, :wheres, :sets, :removes, :order_bys, :skip, :limit, :ret_distinct] %}
         new_query_proxy.{{var.id}} = @{{var.id}}.dup
       {% end %}
 
@@ -154,6 +155,12 @@ module Neo4j
     end
 
     def limit(@limit)
+      clone_for_chain
+    end
+
+    def distinct
+      puts "QueryProxy#distinct"
+      @ret_distinct = true
       clone_for_chain
     end
 
@@ -306,7 +313,14 @@ module Neo4j
               end
             end
 
-            cypher_query << " #{@ret}" unless @ret == ""
+            if @ret != ""
+              if @ret_distinct
+                # cypher_query << " #{@ret.gsub(obj_variable_name, "DISTINCT #{obj_variable_name}")}"
+                cypher_query << " RETURN DISTINCT #{obj_variable_name}"
+              else
+                cypher_query << " #{@ret}"
+              end
+            end
 
             if @create_merge == "" && @ret !~ /delete/i
               cypher_query << " ORDER BY " + @order_bys.map { |(prop, dir)| "#{prop} #{dir.to_s}" }.join(", ") if @order_bys.any?
@@ -380,7 +394,7 @@ module Neo4j
         end
 
         def count
-          orig_ret, @ret = @ret, "RETURN COUNT(*)"
+          orig_ret, @ret = @ret, "RETURN COUNT(#{obj_variable_name})"
           val = execute_count
           @ret = orig_ret
 

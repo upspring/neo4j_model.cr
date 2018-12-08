@@ -96,4 +96,21 @@ describe Neo4jModel do
     genres = q.return_values.map(&.["g"]).map { |node| Genre.new(node.as(Neo4j::Node)) }
     genres.map(&.name).compact.sort.should eq ["Animation", "Biography", "Romance"]
   end
+
+  it "should support DISTINCT return values" do
+    m = Movie.create(name: "Titanic", year: 1998)
+    m2 = Movie.create(name: "Aviator", year: 2004)
+
+    g = Genre.create(name: "Romance")
+    g2 = Genre.create(name: "Biography")
+
+    g.movies << m
+    g.movies << m2
+    g2.movies << m2
+
+    genres = Movie.all.genres.execute
+    genres.to_a.map(&.name).compact.sort.should eq ["Biography", "Romance", "Romance"]
+    genres = Movie.all.genres.distinct.execute
+    genres.to_a.map(&.name).compact.sort.should eq ["Biography", "Romance"]
+  end
 end
