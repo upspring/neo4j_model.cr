@@ -17,7 +17,7 @@ module Neo4j
 
         def [](key : Symbol | String)
           raise IndexError.new unless _undeclared_properties.has_key?(key.to_s) || _relationship.properties.has_key?(key.to_s)
-          self[key]?
+          self[key]
         end
 
         def []=(key : Symbol | String, val : Neo4j::Type) : Neo4j::Type

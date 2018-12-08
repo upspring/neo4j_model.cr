@@ -78,7 +78,7 @@ describe Neo4jModel do
     Movie.count.should eq 0
   end
 
-  it "should support arbitrary queries with arbitrary return values" do
+  it "supports arbitrary queries with arbitrary return values" do
     m = Movie.create(name: "Titanic", year: 1998)
     m2 = Movie.create(name: "Aviator", year: 2004)
     m3 = Movie.create(name: "Futurama: Bender's Big Score", year: 2007)
@@ -97,7 +97,7 @@ describe Neo4jModel do
     genres.map(&.name).compact.sort.should eq ["Animation", "Biography", "Romance"]
   end
 
-  it "should support DISTINCT return values and counts" do
+  it "supports DISTINCT return values and counts" do
     m = Movie.create(name: "Titanic", year: 1998)
     m2 = Movie.create(name: "Aviator", year: 2004)
 
@@ -109,16 +109,29 @@ describe Neo4jModel do
     g2.movies << m2
 
     genres = Movie.all.genres.execute
-    genres.to_a.map(&.name).compact.sort.should eq ["Biography", "Romance", "Romance"]
+    genres.map(&.name).compact.sort.should eq ["Biography", "Romance", "Romance"]
 
     Movie.all.genres.count.should eq 3
 
     genres = Movie.all.genres.distinct.execute
-    genres.to_a.map(&.name).compact.sort.should eq ["Biography", "Romance"]
+    genres.map(&.name).compact.sort.should eq ["Biography", "Romance"]
 
     Movie.all.genres.distinct.count.should eq 2
 
     # generated query should ignore the order bys
     Movie.all.genres.order(:name).distinct.count.should eq 2
+  end
+
+  it "supports mapping and iteration over results" do
+    m = Movie.create(name: "Titanic", year: 1998)
+    m2 = Movie.create(name: "Aviator", year: 2004)
+
+    results = Array(String).new
+    Movie.all.each { |m| results << m.name }
+    results.sort!.should eq ["Aviator", "Titanic"]
+
+    Movie.all.map(&.name).sort.should eq results
+
+    Movie.all[0].should eq Movie.first
   end
 end

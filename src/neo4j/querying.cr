@@ -186,7 +186,7 @@ module Neo4j
 
       # create custom QueryProxy subclass
       class QueryProxy < Neo4j::QueryProxy
-        include Enumerable(Array({{@type.id}}))
+        include Enumerable({{@type.id}})
 
         property label : String
         property uuid : String?
@@ -477,8 +477,6 @@ module Neo4j
           (executed? ? to_a : limit(1).to_a).first?
         end
 
-        # TODO: def first_with_rel : {{@type.id}}
-
         def first_with_rel? : {{@type.id}}?
           val = nil
 
@@ -500,6 +498,14 @@ module Neo4j
           execute unless executed?
 
           @_objects[index]
+        end
+
+        def first_with_rel : {{@type.id}}
+          if (val = first_with_rel?)
+            val
+          else
+            raise IndexError.new
+          end
         end
 
         def size

@@ -35,14 +35,14 @@ module Neo4j
         if (ids = @{{name}}_ids)
           ids
         else
-          @{{name}}_ids = {{name}}.to_a.map(&.id).compact
+          @{{name}}_ids = {{name}}.map(&.id).compact
         end
       end
 
       def persist_{{name}}_ids
         # at this point, @name_ids is the desired state, and
         # the database rels (existing_ids) are not there yet
-        existing_ids = {{name}}.to_a.map(&.id).compact
+        existing_ids = {{name}}.map(&.id).compact
         new_ids = {{name}}_ids - existing_ids
         old_ids = existing_ids - {{name}}_ids
 
