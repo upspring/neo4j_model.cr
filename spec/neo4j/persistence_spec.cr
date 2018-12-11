@@ -66,11 +66,20 @@ describe Neo4jModel do
     m["bool"].as(Bool).should be_true
     m.get_i("int").should eq 123
     m.get_bool("bool").should be_true
+    expect_raises(IndexError) { m["property-that-doesnt-exist"] }
+
+    # should also work for regular (named) properties
+    m["name"].should eq "Titanic"
+    m["year"].should eq 1997
+    m["released"].should be_true
+    m.get("name").should eq "Titanic"
+    m.get_i("year").should eq 1997
+    m.get_bool("released").should be_true
   end
 
   # it "should get/set undeclared String, Int and Bool properties via hash" do
   #   m = Movie.create(name: "Titanic", year: 1997)
-  #   m.update_properties("str" => "asdf", "int" => 123, "bool" => true)
+  #   m.update_properties({ "str" => "asdf", "int" => 123, "bool" => true })
   #   m["str"].should eq "asdf"
   #   m["int"].as(Int).should eq 123
   #   m["bool"].as(Bool).should be_true
@@ -80,7 +89,7 @@ describe Neo4jModel do
 
   # it "should get/set undeclared String, Int and Bool properties via named tuple" do
   #   m = Movie.create(name: "Titanic", year: 1997)
-  #   m.update_properties("str" => "asdf", "int" => 123, "bool" => true)
+  #   m.update_properties(str: "asdf", int: 123, bool: true)
   #   m["str"].should eq "asdf"
   #   m["int"].as(Int).should eq 123
   #   m["bool"].as(Bool).should be_true

@@ -8,6 +8,7 @@ Arranged in reverse chronological order (latest changes on top).
 * Added support for arbitrary queries with arbitrary return values (some assembly required)
 * Added QueryProxy#set_label
 * Added QueryProxy#distinct (RETURN DISTINCT), with a caveat: cannot return rels if distinct is used
+* Fixed issue that caused QueryProxy#map to require a call to #to_a first.
 
 ## v0.8.0 - 2018-11-28
 

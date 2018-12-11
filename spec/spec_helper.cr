@@ -18,6 +18,7 @@ class Movie
 
   property name : String = "" # make sure we can create non-nilable properties as long as they have default values
   property year : Integer?
+  property released : Bool = true
 
   # help wanted: come up with more plausible example properties
   property example_array : Array(String)?

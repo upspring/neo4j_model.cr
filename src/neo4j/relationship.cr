@@ -28,12 +28,12 @@ module Neo4j
           self[prop]?
         end
 
-        def get_i(key : Symbol | String)
-          self[key]?.try &.as?(Int)
+        def get_i(prop : Symbol | String)
+          self[prop]?.try &.as?(Int)
         end
 
-        def get_bool(key : Symbol | String)
-          self[key]?.try &.as?(Bool)
+        def get_bool(prop : Symbol | String)
+          self[prop]?.try &.as?(Bool)
         end
 
         def set(prop : String | Symbol, val : Neo4j::Type)
