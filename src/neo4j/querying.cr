@@ -299,8 +299,8 @@ module Neo4j
               cypher_query << " SET "
               sets.each_with_index do |(str, params), index|
                 cypher_query << ", " if index > 0
-                cypher_query << "#{str} " + params.map { |k, v| v ? "#{var_name}.`#{k}` = $#{k}_s#{index}" : "#{var_name}.`#{k}` = NULL" }.join(", ")
-                params.each { |k, v| @cypher_params["#{k}_s#{index}"] = v if v }
+                cypher_query << "#{str} " + params.map { |k, v| v.nil? ? "#{var_name}.`#{k}` = NULL" : "#{var_name}.`#{k}` = $#{k}_s#{index}" }.join(", ")
+                params.each { |k, v| @cypher_params["#{k}_s#{index}"] = v unless v.nil? }
               end
             end
 
