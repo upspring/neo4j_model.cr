@@ -2,13 +2,15 @@
 
 Arranged in reverse chronological order (latest changes on top).
 
-## v0.9.0 (unreleased)
+## v0.9.0 - 2018-12-20
 
 * Added support for WHERE IN queries with array param
 * Added support for arbitrary queries with arbitrary return values (some assembly required)
 * Added QueryProxy#set_label
 * Added QueryProxy#distinct (RETURN DISTINCT), with a caveat: cannot return rels if distinct is used
-* Fixed issue that caused QueryProxy#map to require a call to #to_a first.
+* Added optional argument `plural` to belongs_to and has_one
+* Fixed issue that caused QueryProxy#map to require a call to #to_a first
+* Fixed bug that prevented saving boolean false values (ended up saving as NULL)
 
 ## v0.8.0 - 2018-11-28
 
