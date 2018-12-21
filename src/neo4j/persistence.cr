@@ -234,7 +234,7 @@ module Neo4j
       @_changes.clear
 
       # look for changes to associations and persist as needed
-      {% for var in @type.instance_vars.select { |v| v.id =~ /_ids?$/ } %}
+      {% for var in @type.instance_vars.select { |v| v.id =~ /_ids?$/ && !(v.id =~ /^_/) } %}
         {% if var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
           if (old_value = @_node.properties["{{var}}"]?) != (new_value = @{{var}}.to_json)
             @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }

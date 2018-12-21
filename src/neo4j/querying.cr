@@ -71,7 +71,7 @@ module Neo4j
       new_hash = ParamsHash.new
       params.each do |k, v|
         if v.is_a?(Array) # not entirely sure why this is needed (but it is)
-          new_hash[k] = v.map { |val| val.as(Neo4j::Type) }
+          new_hash[k] = v.map(&.as(Neo4j::Type))
         else
           new_hash[k] = v
         end
