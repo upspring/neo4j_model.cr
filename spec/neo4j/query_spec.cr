@@ -134,4 +134,12 @@ describe Neo4jModel do
 
     Movie.all[0].should eq Movie.first
   end
+
+  it "supports skip and limit for pagination" do
+    m = Movie.create(name: "Aviator", year: 2004)
+    m2 = Movie.create(name: "Titanic", year: 1998)
+    m3 = Movie.create(name: "Futurama: Bender's Big Score", year: 2007)
+
+    Movie.order(:year).skip(1).limit(1).first.should eq m
+  end
 end

@@ -150,6 +150,8 @@ module Neo4j
       order(**params)
     end
 
+    # shown here for documentation purposes, but actual definition is in macro
+    # included (type-specific subclass) due to conflict with Enumerable#skip
     def skip(@skip)
       clone_for_chain
     end
@@ -373,6 +375,11 @@ module Neo4j
           end
 
           self
+        end
+
+        # typically paired with #limit for pagination
+        def skip(@skip)
+          clone_for_chain
         end
 
         def count

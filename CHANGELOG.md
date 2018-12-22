@@ -2,6 +2,10 @@
 
 Arranged in reverse chronological order (latest changes on top).
 
+## Unreleased
+
+* Fixed: Redefined QueryProxy#skip in type-specific subclass to override Enumerable#skip
+
 ## v0.9.0 - 2018-12-20
 
 * Added support for WHERE IN queries with array param
