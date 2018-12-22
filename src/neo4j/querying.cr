@@ -448,6 +448,10 @@ module Neo4j
           where(**params).first?
         end
 
+        def find_by!(**params)
+          where(**params).first
+        end
+
         def find_or_initialize_by(**params)
           find_by(**params) || new(**params)
         end
@@ -598,6 +602,10 @@ module Neo4j
 
       def self.find_by(**params)
         where(**params).first?
+      end
+
+      def self.find_by!(**params)
+        where(**params).first
       end
 
       def self.find_or_initialize_by(**params)

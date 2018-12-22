@@ -4,6 +4,7 @@ Arranged in reverse chronological order (latest changes on top).
 
 ## Unreleased
 
+* Added: find_by!
 * Fixed: Redefined QueryProxy#skip in type-specific subclass to override Enumerable#skip
 
 ## v0.9.0 - 2018-12-20
