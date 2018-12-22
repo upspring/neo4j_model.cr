@@ -24,6 +24,10 @@ RUN git clone https://github.com/f/guardian.git && cd guardian && crystal build 
 RUN useradd -m -k /etc/skel app
 WORKDIR /home/app/myapp
 
+# Startup scripts
+RUN mkdir -p /etc/my_init.d
+COPY docker/startup/chown.sh /etc/my_init.d/
+
 # Post-build clean up
 RUN apt-get clean && rm -rf /tmp/* /var/tmp/*
 RUN rm -rf /var/lib/apt/lists/*
