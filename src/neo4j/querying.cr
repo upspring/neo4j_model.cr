@@ -260,10 +260,10 @@ module Neo4j
                 if v
                   if v.is_a?(Array)
                     new_params["#{k}_w#{index}"] = v
-                    "(#{obj_variable_name}.`#{k}` IN $#{k}_w#{index})"
+                    "(#{obj_variable_name}.`#{k}` IN $`#{k}_w#{index}`)"
                   else
                     new_params["#{k}_w#{index}"] = v
-                    "(#{obj_variable_name}.`#{k}` = $#{k}_w#{index})"
+                    "(#{obj_variable_name}.`#{k}` = $`#{k}_w#{index}`)"
                   end
                 else
                   "(#{obj_variable_name}.`#{k}` IS NULL)"
@@ -301,7 +301,7 @@ module Neo4j
               cypher_query << " SET "
               sets.each_with_index do |(str, params), index|
                 cypher_query << ", " if index > 0
-                cypher_query << "#{str} " + params.map { |k, v| v.nil? ? "#{var_name}.`#{k}` = NULL" : "#{var_name}.`#{k}` = $#{k}_s#{index}" }.join(", ")
+                cypher_query << "#{str} " + params.map { |k, v| v.nil? ? "#{var_name}.`#{k}` = NULL" : "#{var_name}.`#{k}` = $`#{k}_s#{index}`" }.join(", ")
                 params.each { |k, v| @cypher_params["#{k}_s#{index}"] = v unless v.nil? }
               end
             end

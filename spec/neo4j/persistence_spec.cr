@@ -47,12 +47,12 @@ describe Neo4jModel do
 
   it "should get/set undeclared String, Int and Bool properties via hash" do
     m = Movie.create(name: "Titanic", year: 1997)
-    m["str"] = "asdf"
+    m["str-1"] = "asdf"
     m["int"] = 123
     m["bool"] = true
 
     # should work immediately...
-    m["str"].should eq "asdf"
+    m["str-1"].should eq "asdf"
     m["int"].as(Int).should eq 123
     m["bool"].as(Bool).should be_true
     m.get_i("int").should eq 123
@@ -61,7 +61,7 @@ describe Neo4jModel do
     # ... as well as after a save/find cycle
     m.save
     m = Movie.find!(m.uuid)
-    m["str"].should eq "asdf"
+    m["str-1"].should eq "asdf"
     m["int"].as(Int).should eq 123
     m["bool"].as(Bool).should be_true
     m.get_i("int").should eq 123
