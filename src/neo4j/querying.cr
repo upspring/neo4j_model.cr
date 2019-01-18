@@ -341,7 +341,8 @@ module Neo4j
 
             if @create_merge == "" && @ret !~ /delete/i && @ret !~ /count/i
               cypher_query << " ORDER BY " + @order_bys.map { |(prop, dir)| "#{prop} #{dir.to_s}" }.join(", ") if @order_bys.any?
-              cypher_query << " SKIP #{@skip} LIMIT #{@limit}"
+              cypher_query << " SKIP #{@skip}" if @skip.to_i > 0
+              cypher_query << " LIMIT #{@limit}" if @limit.to_i > 0 && @match =~ /MATCH/i
             end
           end
 
