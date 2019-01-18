@@ -49,6 +49,10 @@ describe Neo4jModel do
 
     Movie.where(year: [1997, 2004]).to_a.sort { |a, b| (a.year || 0) <=> (b.year || 0) }.should eq [m, m2]
     Movie.where(name: ["Titanic", "The Aviator"]).to_a.sort { |a, b| (a.year || 0) <=> (b.year || 0) }.should eq [m, m2]
+    Movie.where(uuid: [m.id, m2.id]).to_a.sort { |a, b| (a.year || 0) <=> (b.year || 0) }.should eq [m, m2]
+
+    # maybe make this work someday, since I am CONSTANTLY making this mistake (querying id instead of uuid)
+    # Movie.where(id: [m.id, m2.id]).to_a.sort { |a, b| (a.year || 0) <=> (b.year || 0) }.should eq [m, m2]
   end
 
   it "supports count queries" do
