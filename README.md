@@ -102,8 +102,7 @@ member = org.members.users.where(uuid: user.uuid).return(member: :member)
 ## Roadmap
 
 For 1.0:
-* [#2](https://github.com/upspring/neo4j_model.cr/issues/2) adjust API to align with [Granite](https://github.com/amberframework/granite)
-* [#3](https://github.com/upspring/neo4j_model.cr/issues/3) expand QueryProxy#where to accept arrays and ranges
+* [#3](https://github.com/upspring/neo4j_model.cr/issues/3) expand QueryProxy#where to accept ranges
 * [#4](https://github.com/upspring/neo4j_model.cr/issues/4) add QueryProxy#update_all (set property values on all matched nodes, skipping callbacks)
 
 Future (help wanted!)

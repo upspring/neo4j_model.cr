@@ -302,22 +302,22 @@ module Neo4j
               sets.each_with_index do |(str, params), index|
                 cypher_query << ", " if index > 0
 
-                # using params triggers a strange bug when there are more than 15
-                # cypher_query << "#{str} " + params.map { |k, v| v.nil? ? "#{var_name}.`#{k}` = NULL" : "#{var_name}.`#{k}` = {#{k}_s#{index}}" }.join(", ")
-                # params.each { |k, v| @cypher_params["#{k}_s#{index}"] = v unless v.nil? }
+                # method 1: params
+                cypher_query << "#{str} " + params.map { |k, v| v.nil? ? "#{var_name}.`#{k}` = NULL" : "#{var_name}.`#{k}` = $`#{k}_s#{index}`" }.join(", ")
+                params.each { |k, v| @cypher_params["#{k}_s#{index}"] = v unless v.nil? }
 
-                # so for now we will (carefully) inline the values
-                cypher_query << "#{str} " + params.map do |k, v|
-                  case v
-                  when Nil then "#{var_name}.`#{k}` = NULL"
-                  when Bool then "#{var_name}.`#{k}` = #{v.to_json}"
-                  when String then "#{var_name}.`#{k}` = #{v.to_json}"
-                  when Int then "#{var_name}.`#{k}` = #{v.to_json}"
-                  when Float then "#{var_name}.`#{k}` = #{v.to_json}"
-                  else
-                    raise "Unexpected parameter type: #{v.class.name}"
-                  end
-                end.join(", ")
+                # method 2: (carefully!) inlining the values
+                # cypher_query << "#{str} " + params.map do |k, v|
+                #   case v
+                #   when Nil then "#{var_name}.`#{k}` = NULL"
+                #   when Bool then "#{var_name}.`#{k}` = #{v.to_json}"
+                #   when String then "#{var_name}.`#{k}` = #{v.to_json}"
+                #   when Int then "#{var_name}.`#{k}` = #{v.to_json}"
+                #   when Float then "#{var_name}.`#{k}` = #{v.to_json}"
+                #   else
+                #     raise "Unexpected parameter type: #{v.class.name}"
+                #   end
+                # end.join(", ")
               end
             end
 
