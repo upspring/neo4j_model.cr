@@ -4,6 +4,8 @@ Arranged in reverse chronological order (latest changes on top).
 
 ## Unreleased
 
+## v0.9.1 - 2019-01-19
+
 * Added: find_by!
 * Fixed: Omit SKIP and LIMIT from queries when not applicable
 * Fixed: Redefined QueryProxy#skip in type-specific subclass to override Enumerable#skip

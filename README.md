@@ -3,9 +3,9 @@
 [![Version](https://img.shields.io/github/tag/upspring/neo4j_model.cr.svg?maxAge=360)](https://github.com/upspring/neo4j_model.cr/releases/latest)
 [![Build Status](https://travis-ci.org/upspring/neo4j_model.cr.svg?branch=master)](https://travis-ci.org/upspring/neo4j_model.cr)
 [![License](https://img.shields.io/github/license/upspring/neo4j_model.cr.svg)](https://github.com/upspring/neo4j_model.cr/blob/master/LICENSE)
-<!-- [![Gitter](https://img.shields.io/gitter/room/upspring/neo4j_model.cr.svg)](https://gitter.im/upspring/neo4j_model.cr) -->
+[![Gitter](https://img.shields.io/gitter/room/jgaskins/neo4j.cr.svg)](https://gitter.im/jgaskins/neo4j.cr)
 
-Current status: API stabilizing, but minor changes possible. Expecting to reach 1.0 by end of 2018. Give it a try on a new project! Just don't use in production yet.
+Current status: Release candidate. Expecting to reach 1.0 in early 2019. Give it a try!
 
 The goal is a stable and full-featured Neo4j ORM for Crystal. Currently Bolt-only (uses [neo4j.cr](https://github.com/jgaskins/neo4j.cr)). Inspired by ActiveNode/[Neo4j.rb](https://github.com/neo4jrb/neo4j).
 
