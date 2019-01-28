@@ -24,39 +24,9 @@ module Neo4j
     end
 
     def set_attributes(from node : Neo4j::Node)
-      {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
-      if node.properties.has_key?("{{var}}")
-        {% if var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
-          if (array = JSON.parse(node.properties["{{var}}"].as(String)).as_a?)
-            self.{{var}} = array.map(&.as_s)
-          end
-        {% elsif var.type <= Hash(String, String) || (var.type.union? && var.type.union_types.includes?(Hash(String, String))) %}
-          if (hash = JSON.parse(node.properties["{{var}}"].as(String)).as_h?)
-            self.{{var}} = hash.transform_values { |v| v.to_s }
-          end
-        {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
-          self.{{var}} = Time.unix(node.properties["{{var}}"].as(Int))
-        {% elsif var.type <= Bool || (var.type.union? && var.type.union_types.includes?(Bool)) %}
-          val = node.properties["{{var}}"]
-          if val.nil?
-            {% if var.type.union? && var.type.union_types.includes?(Nil) %}
-              self.{{var}} = nil
-            {% end %}
-          else
-            self.{{var}} = val.as(Bool)
-          end
-        {% else %}
-          self.{{var}} = node.properties["{{var}}"].as(typeof(@{{var}}))
-        {% end %}
-      else
-        # set to nil ONLY IF property type includes Nil
-        {% if var.type.union? && var.type.union_types.includes?(Nil) %}
-          self.{{var}} = nil
-        {% end %}
-      end
-      {% end %}
-
-      true
+      hash = Hash(String, PropertyType).new
+      node.properties.each { |k, v| hash[k] = v.as(PropertyType) }
+      set_attributes(hash)
     end
 
     def set_attributes(hash : Hash(String, PropertyType))
@@ -70,19 +40,23 @@ module Neo4j
           else
             {% if var.type <= Bool || (var.type.union? && var.type.union_types.includes?(Bool)) %}
               if (val = hash["{{var}}"]?)
-                if val.is_a?(Bool)
-                  self.{{var}} = hash["{{var}}"].as(Bool)
-                elsif val.is_a?(Int)
-                  self.{{var}} = hash["{{var}}"] == 1
-                elsif val.is_a?(String)
-                  self.{{var}} = ["1", "true"].includes?(hash["{{var}}"].as(String).downcase)
+                case val
+                when Bool
+                  self.{{var}} = val
+                when Int
+                  self.{{var}} = (val == 1)
+                when String
+                  self.{{var}} = ["1", "true"].includes?(val.downcase)
+                else
+                  raise "Don't know how to convert #{val.class.name} to Bool"
                 end
               end
             {% elsif var.type <= Integer || (var.type.union? && (var.type.union_types.includes?(Int8) || var.type.union_types.includes?(Int16) || var.type.union_types.includes?(Int32) || var.type.union_types.includes?(Int64))) %}
               if (val = hash["{{var}}"]?)
-                if val.is_a?(Integer)
+                case val
+                when Integer
                   self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
-                elsif val.is_a?(String)
+                when String
                   val = hash["{{var}}"].as(String).to_i?
                   if val.nil?
                     {% if var.type.union? && var.type.union_types.includes?(Nil) %}
@@ -91,30 +65,50 @@ module Neo4j
                   else
                     self.{{var}} = val
                   end
+                else
+                  raise "Don't know how to convert #{val.class.name} to Integer"
                 end
               end
             {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
               if (val = hash["{{var}}"]?)
-                if val.is_a?(Time)
+                case val
+                when Time
                   self.{{var}} = hash["{{var}}"].as(Time)
+                when Integer
+                  self.{{var}} = Time.unix(hash["{{var}}"].as(Int))
                 else
-                  # FIXME: interpret string or integer values
+                  # FIXME: interpret string values?
+                  raise "Don't know how to convert #{val.class.name} to Time"
                 end
               end
             {% elsif var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
               if (val = hash["{{var}}"]?)
-                if val.is_a?(Array)
+                case val
+                when Array
                   self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
-                elsif val.is_a?(String)
-                  self.{{var}} = Array(String).from_json(val)
+                when String
+                  if (array = JSON.parse(val).as_a?)
+                    self.{{var}} = array.map(&.as_s)
+                  # else
+                  #   self.{{var}} = Array(String).from_json(val)
+                  end
+                else
+                  raise "Don't know how to convert #{val.class.name} to Array(String)"
                 end
               end
             {% elsif var.type <= Hash(String, String) || (var.type.union? && var.type.union_types.includes?(Hash(String, String))) %}
               if (val = hash["{{var}}"]?)
-                if val.is_a?(Hash)
+                case val
+                when Hash
                   self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
-                elsif val.is_a?(String)
-                  self.{{var}} = Hash(String, String).from_json(val)
+                when String
+                  if (h = JSON.parse(val).as_h?)
+                    self.{{var}} = h.transform_values { |v| v.to_s }
+                  # else
+                  #   self.{{var}} = Hash(String, String).from_json(val)
+                  end
+                else
+                  raise "Don't know how to convert #{val.class.name} to Hash"
                 end
               end
             {% elsif var.type <= String || (var.type.union? && var.type.union_types.includes?(String)) %}
@@ -125,6 +119,9 @@ module Neo4j
           end
         end
       {% end %}
+
+      # TODO: error checking?
+      true
     end
 
     def reload : Bool

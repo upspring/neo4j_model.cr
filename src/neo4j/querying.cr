@@ -244,8 +244,6 @@ module Neo4j
           clone_for_chain
         end
 
-        # TODO: def remove_label(label : String)
-
         def expand_where(where : Where) : ExpandedWhere
           str, not, params = where
           index = wheres.size + 1
@@ -257,6 +255,10 @@ module Neo4j
 
             if str == ""
               cypher_query << params.map { |k, v|
+                # id instead of uuid is a common source of frustration
+                if k.to_s == "id"
+                  Neo4jModel.settings.logger.debug "WARNING: `id` used in where clause. Did you mean `uuid`?"
+                end
                 if v
                   if v.is_a?(Array)
                     new_params["#{k}_w#{index}"] = v
@@ -571,11 +573,11 @@ module Neo4j
       end
 
       def self.first
-        QueryProxy.new.limit(1).first
+        QueryProxy.new.first
       end
 
       def self.first?
-        QueryProxy.new.limit(1).first?
+        QueryProxy.new.first?
       end
 
       def self.count
