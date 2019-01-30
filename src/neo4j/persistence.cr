@@ -89,8 +89,6 @@ module Neo4j
                 when String
                   if (array = JSON.parse(val).as_a?)
                     self.{{var}} = array.map(&.as_s)
-                  # else
-                  #   self.{{var}} = Array(String).from_json(val)
                   end
                 else
                   raise "Don't know how to convert #{val.class.name} to Array(String)"
@@ -104,8 +102,6 @@ module Neo4j
                 when String
                   if (h = JSON.parse(val).as_h?)
                     self.{{var}} = h.transform_values { |v| v.to_s }
-                  # else
-                  #   self.{{var}} = Hash(String, String).from_json(val)
                   end
                 else
                   raise "Don't know how to convert #{val.class.name} to Hash"

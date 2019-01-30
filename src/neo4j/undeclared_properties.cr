@@ -6,7 +6,7 @@ module Neo4j
 
     def []?(key : Symbol | String) : Neo4j::Type?
       {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
-        return @{{var}}.as(Neo4j::Type) if key.to_s == "{{var}}"
+        return @{{var}}.as(Neo4j::Type?) if key.to_s == "{{var}}"
       {% end %}
       _undeclared_properties[key.to_s]? || _node.properties[key.to_s]?
     end
