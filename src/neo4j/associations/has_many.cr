@@ -18,7 +18,7 @@ module Neo4j
       end
 
       # instance method, either to start a chained query or to do regular operations (list, add/delete)
-      def {{name}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r)
+      def {{name}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r) : {{klass.id}}::QueryProxy
         proxy = QueryProxy.new.{{name}}(assoc_obj_variable_name, assoc_rel_variable_name)
 
         # while we have the proper context (label & uuid), generate queries to add and remove relationships
@@ -31,7 +31,7 @@ module Neo4j
         proxy = context.chain proxy
       end
 
-      def {{name}}_ids
+      def {{name}}_ids : Array(String)
         if (ids = @{{name}}_ids)
           ids
         else
@@ -39,7 +39,7 @@ module Neo4j
         end
       end
 
-      def persist_{{name}}_ids
+      def persist_{{name}}_ids : Bool
         # at this point, @name_ids is the desired state, and
         # the database rels (existing_ids) are not there yet
         existing_ids = {{name}}.to_a.map(&.id).compact

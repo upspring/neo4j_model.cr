@@ -15,21 +15,21 @@ module Neo4j
       property _changes = Hash(String | Symbol, Changeset).new
     end
 
-    def persisted?
+    def persisted? : Bool
       @_persisted
     end
 
-    def new_record?
+    def new_record? : Bool
       !@_persisted
     end
 
-    def set_attributes(from node : Neo4j::Node)
+    def set_attributes(from node : Neo4j::Node) : Bool
       hash = Hash(String, PropertyType).new
       node.properties.each { |k, v| hash[k] = v.as(PropertyType) }
       set_attributes(hash)
     end
 
-    def set_attributes(hash : Hash(String, PropertyType))
+    def set_attributes(hash : Hash(String, PropertyType)) : Bool
       {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
         if hash.has_key?("{{var}}")
           if hash["{{var}}"].nil?

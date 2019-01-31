@@ -46,18 +46,18 @@ module Neo4j
     # TODO: want to expose #query_as as part of public api, but would first need to do
     #       some find/replace magic on existing match/create_merge/wheres/ret
     # NOTE: ActiveNode called this .as, but crystal doesn't allow that name
-    def query_as(obj_var : (Symbol | String))
+    def query_as(obj_var : (Symbol | String)) : QueryProxy
       @obj_variable_name = obj_var.to_s
       self
     end
 
-    def query_as(obj_var : (Symbol | String), rel_var : (Symbol | String))
+    def query_as(obj_var : (Symbol | String), rel_var : (Symbol | String)) : QueryProxy
       @rel_variable_name = rel_var.to_s
       query_as(obj_var)
     end
 
     # clone the query, not the results
-    def clone_for_chain
+    def clone_for_chain : QueryProxy
       new_query_proxy = self.class.new(@match, @create_merge, @ret)
       {% for var in [:label, :obj_variable_name, :rel_variable_name, :wheres, :sets, :removes, :order_bys, :skip, :limit, :ret_distinct] %}
         new_query_proxy.{{var.id}} = @{{var.id}}.dup
@@ -67,7 +67,7 @@ module Neo4j
     end
 
     # NamedTuple does not have .each_with_object
-    private def params_hash_from_named_tuple(params)
+    private def params_hash_from_named_tuple(params) : ParamsHash
       new_hash = ParamsHash.new
       params.each do |k, v|
         if v.is_a?(Array) # not entirely sure why this is needed (but it is)
@@ -84,44 +84,44 @@ module Neo4j
       raise "must redefine expand_where in subclass"
     end
 
-    def where(str : String, **params)
+    def where(str : String, **params) : QueryProxy
       @wheres << expand_where({str, "", params_hash_from_named_tuple(params)})
       clone_for_chain
     end
 
-    def where(**params)
+    def where(**params) : QueryProxy
       @wheres << expand_where({"", "", params_hash_from_named_tuple(params)})
       clone_for_chain
     end
 
-    def where_not(str : String, **params)
+    def where_not(str : String, **params) : QueryProxy
       @wheres << expand_where({str, "NOT", params_hash_from_named_tuple(params)})
       clone_for_chain
     end
 
-    def where_not(**params)
+    def where_not(**params) : QueryProxy
       @wheres << expand_where({"", "NOT", params_hash_from_named_tuple(params)})
       clone_for_chain
     end
 
-    def set(**params)
+    def set(**params) : QueryProxy
       @sets << {"", params_hash_from_named_tuple(params)}
       clone_for_chain
     end
 
-    def set(params)
+    def set(params) : QueryProxy
       @sets << {"", params_hash_from_named_tuple(params)}
       clone_for_chain
     end
 
     # this form is mainly for internal use, but use it if you need it
-    def order(prop : Symbol, dir : SortDirection = Neo4j::QueryProxy::SortDirection::ASC)
+    def order(prop : Symbol, dir : SortDirection = Neo4j::QueryProxy::SortDirection::ASC) : QueryProxy
       @order_bys << expand_order_by(prop, dir)
       clone_for_chain
     end
 
     # ex: .order(:name, :created_by)
-    def order(*params)
+    def order(*params) : QueryProxy
       params.each do |prop|
         @order_bys << expand_order_by(prop, SortDirection::ASC)
       end
@@ -129,7 +129,7 @@ module Neo4j
     end
 
     # ex: .order(name: :ASC, created_by: :desc)
-    def order(**params)
+    def order(**params) : QueryProxy
       params.each do |prop, dir|
         case dir.to_s.downcase
         when "desc"
@@ -141,26 +141,27 @@ module Neo4j
       clone_for_chain
     end
 
-    def unorder
+    def unorder : QueryProxy
       @order_bys.clear
+      clone_for_chain
     end
 
-    def reorder(**params)
-      unorder
+    def reorder(**params) : QueryProxy
+      @order_bys.clear
       order(**params)
     end
 
     # shown here for documentation purposes, but actual definition is in macro
     # included (type-specific subclass) due to conflict with Enumerable#skip
-    def skip(@skip)
+    def skip(@skip) : QueryProxy
       clone_for_chain
     end
 
-    def limit(@limit)
+    def limit(@limit) : QueryProxy
       clone_for_chain
     end
 
-    def distinct
+    def distinct : QueryProxy
       @ret_distinct = true
       clone_for_chain
     end
@@ -171,7 +172,7 @@ module Neo4j
       clone_for_chain # ?
     end
 
-    def executed?
+    def executed? : Bool
       @_executed
     end
   end
@@ -209,7 +210,7 @@ module Neo4j
           @obj_variable_name = "{{@type.id.underscore}}"
         end
 
-        def <<(obj : (String | {{@type.id}}))
+        def <<(obj : (String | {{@type.id}})) : QueryProxy
           if (proxy = @add_proxy.as({{@type.id}}::QueryProxy))
             target_uuid = obj.is_a?(String) ? obj : obj.uuid
 
@@ -219,9 +220,11 @@ module Neo4j
           else
             raise "add_proxy not set"
           end
+
+          self
         end
 
-        def delete(obj : (String | {{@type.id}}))
+        def delete(obj : (String | {{@type.id}})) : QueryProxy
           if (proxy = @delete_proxy.as({{@type.id}}::QueryProxy))
             target_uuid = obj.is_a?(String) ? obj : obj.uuid
 
@@ -231,15 +234,17 @@ module Neo4j
           else
             raise "delete_proxy not set"
           end
+
+          self
         end
 
         # somewhat confusingly named since we also have a property called label, but not sure how we could do better
-        def set_label(label : Symbol | String)
+        def set_label(label : Symbol | String) : QueryProxy
           @sets << { "#{obj_variable_name}:#{label.to_s}", ParamsHash.new }
           clone_for_chain
         end
 
-        def remove_label(label : Symbol | String)
+        def remove_label(label : Symbol | String) : QueryProxy
           @removes << "#{obj_variable_name}:#{label.to_s}"
           clone_for_chain
         end
@@ -281,11 +286,11 @@ module Neo4j
           { expanded_str, new_params }
         end
 
-        def expand_order_by(prop : Symbol, dir : SortDirection)
+        def expand_order_by(prop : Symbol, dir : SortDirection) : Tuple(String, SortDirection)
           { "#{obj_variable_name}.`#{prop}`", dir }
         end
 
-        def build_cypher_query(var_name = obj_variable_name)
+        def build_cypher_query(var_name = obj_variable_name) : String
           @cypher_query = String.build do |cypher_query|
             cypher_query << @match
 
@@ -350,9 +355,11 @@ module Neo4j
 
           Neo4jModel.settings.logger.debug "Constructed Cypher query: #{@cypher_query}"
           Neo4jModel.settings.logger.debug "  with params: #{@cypher_params.inspect}"
+
+          @cypher_query.not_nil!
         end
 
-        def execute(skip_build = false)
+        def execute(skip_build = false) : QueryProxy
           build_cypher_query unless skip_build
 
           {{@type.id}}.with_connection do |conn|

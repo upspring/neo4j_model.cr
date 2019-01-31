@@ -8,26 +8,26 @@ module Neo4j
       Bolt::Connection.new(Neo4jModel.settings.neo4j_bolt_url, ssl: false)
     end
 
-    def uuid
+    def uuid : String
       @_uuid
-    end
-
-    def rel
-      @_rel
     end
 
     # id works differently from uuid because sometimes presence of id is used like #persisted?
     # but in our case, for various reasons, we assign a uuid even before the node is created
-    def id
+    def id : String?
       persisted? ? @_uuid : nil
     end
 
-    def label
+    def label : String
       self.class.label
     end
 
     macro included
       def_equals(@_uuid)
+
+      def rel : Relationship?
+        @_rel
+      end
 
       # use leading underscore to indicate a property/ivar that should *not* be persisted to neo4j
       property _uuid : String = UUID.random.to_s # special because it is persisted on create, but never on update

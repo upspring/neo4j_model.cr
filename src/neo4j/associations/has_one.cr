@@ -31,7 +31,7 @@ module Neo4j
       end
 
       # instance method, to start a chained query
-      def {{plural}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r)
+      def {{plural}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r) : {{klass.id}}::QueryProxy
         # create a proxy for all queries related to this association
         proxy = QueryProxy.new.{{plural}}(assoc_obj_variable_name, assoc_rel_variable_name)
 
@@ -41,11 +41,11 @@ module Neo4j
       end
 
       # instance method, for normal use (returns object)
-      def {{name}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r)
+      def {{name}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r) : {{klass.id}}?
         {{plural}}(assoc_obj_variable_name, assoc_rel_variable_name).first_with_rel?
       end
 
-      def {{name}}=(target : {{klass.id}}?)
+      def {{name}}=(target : {{klass.id}}?) : {{klass.id}}?
         if target
           @{{name}}_id = target.uuid
           target
@@ -55,7 +55,7 @@ module Neo4j
         target
       end
 
-      def {{name}}_id
+      def {{name}}_id : String?
         if @{{name}}_id
           @{{name}}_id
         elsif (obj = {{name}})
@@ -63,7 +63,7 @@ module Neo4j
         end
       end
 
-      def persist_{{name}}_id
+      def persist_{{name}}_id : Bool
         # remove any existing rels of this type
         {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})-[r:{{rel_type.id}}]->(m)", "DELETE r").execute
 
@@ -71,6 +71,8 @@ module Neo4j
           {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: '#{target_uuid}'})",
                                        "MERGE (n)-[r:{{rel_type.id}}]->(m)", "RETURN n").execute
         end
+
+        true
       end
     end
   end

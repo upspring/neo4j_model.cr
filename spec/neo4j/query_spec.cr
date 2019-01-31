@@ -84,7 +84,6 @@ describe Neo4jModel do
     Actor.find(actor.id).should_not be_nil
   end
 
-
   it "supports arbitrary queries with arbitrary return values" do
     m = Movie.create(name: "Titanic", year: 1998)
     m2 = Movie.create(name: "Aviator", year: 2004)
