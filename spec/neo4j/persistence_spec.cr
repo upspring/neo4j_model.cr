@@ -77,6 +77,13 @@ describe Neo4jModel do
     m.get_bool("released").should be_true
   end
 
+  it "should support reload (re-read properties from database)" do
+    m = Movie.create(name: "Titanic", year: 1997)
+    m.year = 12345
+    m.reload
+    m.year.should eq 1997
+  end
+
   # it "should get/set undeclared String, Int and Bool properties via hash" do
   #   m = Movie.create(name: "Titanic", year: 1997)
   #   m.update_properties({ "str" => "asdf", "int" => 123, "bool" => true })

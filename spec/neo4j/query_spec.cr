@@ -63,24 +63,27 @@ describe Neo4jModel do
     Movie.count.should eq 2
   end
 
-  it "supports set_label queries" do
-    m = Movie.create(name: "Titanic")
-    Movie.count.should eq 1
-    Director.count.should eq 0
-    Movie.where(name: "Titanic").set_label(:Director).execute
-    Director.count.should eq 1
-    Movie.count.should eq 1
+  it "supports set_label/remove_label queries" do
+    actor = Actor.create(name: "Leonardo DiCaprio")
+    Actor.count.should eq 1
+    Agent.count.should eq 0
+    Actor.where(uuid: actor.id).set_label(:Agent).execute
+    Actor.count.should eq 1
+    Agent.count.should eq 1
+    agent = Agent.find!(actor.id)
+    agent.name.should eq "Leonardo DiCaprio"
+    Agent.where(uuid: agent.id).remove_label(:Actor).execute
+    Actor.count.should eq 0
+    Agent.count.should eq 1
+    Actor.find(actor.id).should be_nil
+
+    # double switch
+    Agent.where(uuid: agent.id).set_label(:Actor).remove_label(:Agent).execute
+    Actor.count.should eq 1
+    Agent.count.should eq 0
+    Actor.find(actor.id).should_not be_nil
   end
 
-  it "supports remove_label queries" do
-    m = Movie.create(name: "Titanic")
-    Movie.where(name: "Titanic").set_label(:Director).execute
-    Director.count.should eq 1
-    Movie.count.should eq 1
-    Movie.where(name: "Titanic").remove_label(:Movie).execute
-    Director.count.should eq 1
-    Movie.count.should eq 0
-  end
 
   it "supports arbitrary queries with arbitrary return values" do
     m = Movie.create(name: "Titanic", year: 1998)
