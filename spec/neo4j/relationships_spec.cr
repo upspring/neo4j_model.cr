@@ -9,14 +9,28 @@ describe Neo4jModel do
     d.movies << m2
 
     d.movies.each_with_rel do |movie, r|
-      r.set("prop1", "val1") if movie == m
-      r.set("prop1", "val2") if movie == m2
+      if movie == m
+        r.set("prop1", "val1")
+      end
+      if movie == m2
+        r.set("prop1", "val2")
+        r["str"] = "string"
+        r["int"] = 123
+        r["bool"] = true
+      end
       r.save
     end
 
     d.movies.each_with_rel do |movie, r|
-      r.get("prop1").should eq "val1" if movie == m
-      r.get("prop1").should eq "val2" if movie == m2
+      if movie == m
+        r.get("prop1").should eq "val1"
+      end
+      if movie == m2
+        r.get("prop1").should eq "val2"
+        r["str"].should eq "string"
+        r.get_i("int").should eq 123
+        r.get_bool("bool").should eq true
+      end
     end
 
     m = Movie.find!(m.uuid)
