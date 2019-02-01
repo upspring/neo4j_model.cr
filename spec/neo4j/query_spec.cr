@@ -45,14 +45,15 @@ describe Neo4jModel do
     m = Movie.create(name: "Titanic", year: 1997)
     m.director = d
     m2 = Movie.create(name: "The Aviator", year: 2004)
-    m3 = Movie.create(name: "Futurama: Bender's Big Score", year: 2007)
+    m3 = Movie.create(name: "Futurama: Bender's Big Score", year: nil)
 
-    Movie.where(year: [1997, 2004]).to_a.sort { |a, b| (a.year || 0) <=> (b.year || 0) }.should eq [m, m2]
-    Movie.where(name: ["Titanic", "The Aviator"]).to_a.sort { |a, b| (a.year || 0) <=> (b.year || 0) }.should eq [m, m2]
-    Movie.where(uuid: [m.id, m2.id]).to_a.sort { |a, b| (a.year || 0) <=> (b.year || 0) }.should eq [m, m2]
+    Movie.where(year: [1997, 2004]).order(:year).to_a.should eq [m, m2]
+    Movie.where(name: ["Titanic", "The Aviator"]).order(:year).to_a.should eq [m, m2]
+    Movie.where(uuid: [m.id, m2.id]).order(:year).to_a.should eq [m, m2]
+    Movie.where(year: [1997, nil]).order(:name).to_a.should eq [m3, m]
 
     # maybe make this work someday, since I am CONSTANTLY making this mistake (querying id instead of uuid)
-    # Movie.where(id: [m.id, m2.id]).to_a.sort { |a, b| (a.year || 0) <=> (b.year || 0) }.should eq [m, m2]
+    # Movie.where(id: [m.id, m2.id]).order(:year).to_a.should eq [m, m2]
   end
 
   it "supports count queries" do
