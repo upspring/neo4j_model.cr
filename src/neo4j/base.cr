@@ -4,7 +4,7 @@ require "pool/connection"
 
 module Neo4j
   module Model
-    ConnectionPool = ::ConnectionPool(Bolt::Connection).new do
+    ConnectionPool = ::ConnectionPool(Bolt::Connection).new(capacity: Neo4jModel.settings.pool_size) do
       Bolt::Connection.new(Neo4jModel.settings.neo4j_bolt_url, ssl: false)
     end
 

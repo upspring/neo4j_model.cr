@@ -20,6 +20,7 @@ module Neo4jModel
   class Settings
     property logger : Logger
     property neo4j_bolt_url : String = ENV["NEO4J_URL"]? || "bolt://neo4j@localhost:7687"
+    property pool_size : Int32 = 25
 
     def initialize
       @logger = Logger.new nil
