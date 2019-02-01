@@ -58,12 +58,17 @@ describe Neo4jModel do
     # Movie.where(id: [m.id, m2.id]).order(:year).to_a.should eq [m, m2]
   end
 
-  it "supports count queries" do
+  it "supports count and pluck queries" do
     m = Movie.create(name: "Titanic", year: 1997)
     Movie.count.should eq 1
 
     n = Movie.create(name: "The Aviator", year: 2004)
     Movie.count.should eq 2
+
+    Movie.order(:year).pluck(:year).should eq [1997, 2004]
+    Movie.order(:year).pluck("year").should eq [1997, 2004]
+    Movie.order(:year).pluck(:uuid, :year).should eq [{:uuid => m.uuid, :year => 1997}, {:uuid => n.uuid, :year => 2004}]
+    Movie.order(:year).pluck("uuid", "year").should eq [{"uuid" => m.uuid, "year" => 1997}, {"uuid" => n.uuid, "year" => 2004}]
   end
 
   it "supports set_label/remove_label queries" do

@@ -409,14 +409,14 @@ module Neo4j
 
         def count
           orig_ret, @ret = @ret, "RETURN COUNT(#{obj_variable_name})"
-          count : Integer = 0
+          n : Integer = 0
 
           build_cypher_query
 
           {{@type.id}}.with_connection do |conn|
             conn.execute(@cypher_query, @cypher_params).each do |result|
               if (val = result[0]?)
-                count = val.as(Integer)
+                n = val.as(Integer)
               else
                 raise "Error while reading value of COUNT"
               end
@@ -425,7 +425,34 @@ module Neo4j
 
           @ret = orig_ret
 
-          count
+          n
+        end
+
+        def pluck(*props : Symbol | String)
+          props_with_var = props.map { |p| "#{obj_variable_name}.`#{p}`" }.join(", ")
+          orig_ret, @ret = @ret, "RETURN #{props_with_var}"
+
+          flat_array = Array(Neo4j::Type).new
+          hash_array = Array(Hash(Symbol | String, Neo4j::Type)).new
+
+          build_cypher_query
+          @ret = orig_ret
+
+          return flat_array if props.size == 0
+
+          {{@type.id}}.with_connection do |conn|
+            conn.execute(@cypher_query, @cypher_params).each do |result|
+              if props.size == 1
+                flat_array << result[0] if result[0]?
+              else
+                hash = Hash(Symbol | String, Neo4j::Type).new
+                result.each_with_index { |val, index| hash[props[index]] = val }
+                hash_array << hash
+              end
+            end
+          end
+
+          props.size == 1 ? flat_array : hash_array
         end
 
         def delete_all

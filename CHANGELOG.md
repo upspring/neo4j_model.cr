@@ -4,6 +4,12 @@ Arranged in reverse chronological order (latest changes on top).
 
 ## Unreleased
 
+* Added: #pluck (to avoid constructing model objects when all you want are property values)
+* Fixed: Several issues with relationship property get/set
+* Fixed: Several issues with using undeclared properties API to access declared properties
+* Increased default connection pool size from 5 to 25 (and added a setting)
+* Filled in missing return types
+
 ## v0.9.1 - 2019-01-19
 
 * Added: find_by!

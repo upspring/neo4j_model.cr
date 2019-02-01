@@ -7,7 +7,7 @@
 
 Current status: Release candidate. Expecting to reach 1.0 in early 2019. Give it a try!
 
-The goal is a stable and full-featured Neo4j ORM for Crystal. Currently Bolt-only (uses [neo4j.cr](https://github.com/jgaskins/neo4j.cr)). Inspired by ActiveNode/[Neo4j.rb](https://github.com/neo4jrb/neo4j).
+The goal is a stable and full-featured Neo4j ORM for Crystal. Bolt only, no http or https (uses [neo4j.cr](https://github.com/jgaskins/neo4j.cr)). Inspired by ActiveNode/[Neo4j.rb](https://github.com/neo4jrb/neo4j).
 
 Features:
 
@@ -16,9 +16,11 @@ Features:
 * new, save, reload
 * find, limit/skip, order, where (exact matches and arrays; considering adding support for ranges)
 * convenience finders: find_by, find_or_initialize_by, find_or_create_by
+* #count and #pluck (to avoid constructing model objects when not needed)
 * callbacks: before/after save, before/after validation - note: callbacks must return true to continue
-* query proxy to allow method chaining (query is not executed until you call `#to_a`, `#count`, or try to access a record)
-* associations (has_one, has_many, belongs_to, belongs_to_many), chainable (e.g. actor.movies.genres)
+* query proxy to allow method chaining (query is not executed until you call `#to_a`, `#count`, `#pluck` or try to access a record)
+* associations (has_one, has_many, belongs_to, belongs_to_many)
+* associations are chainable, e.g. actor.movies.genres
 * scopes a la ActiveRecord
 * connection pooling ([#1](https://github.com/upspring/neo4j_model.cr/pull/1))
 * simple []/[]=/save interface to read and write relationship properties (similar to undeclared properties)
@@ -37,6 +39,8 @@ dependencies:
 ```
 
 ## Usage
+
+See specs for detailed usage.
 
 ```crystal
 require "neo4j_model"
