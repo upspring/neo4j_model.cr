@@ -9,7 +9,10 @@ module Neo4j
       macro before_validation(*method_syms)
         @@_before_validation_callback = ->(obj : {{@type.id}}) {
           \{% for meth in method_syms %}
-            return false unless obj.\{{meth.id}}
+            unless obj.\{{meth.id}}
+              Neo4jModel.settings.logger.debug "before_validation callback \{{meth.id}} returned false, aborting"
+              return false
+            end
           \{% end %}
           true
         }
@@ -22,7 +25,10 @@ module Neo4j
       macro after_validation(*method_syms)
         @@_after_validation_callback = ->(obj : {{@type.id}}) {
           \{% for meth in method_syms %}
-            return false unless obj.\{{meth.id}}
+            unless obj.\{{meth.id}}
+              Neo4jModel.settings.logger.debug "after_validation callback \{{meth.id}} returned false, aborting"
+              return false
+            end
           \{% end %}
           true
         }
@@ -35,7 +41,10 @@ module Neo4j
       macro before_save(*method_syms)
         @@_before_save_callback = ->(obj : {{@type.id}}) {
           \{% for meth in method_syms %}
-            return false unless obj.\{{meth.id}}
+            unless obj.\{{meth.id}}
+              Neo4jModel.settings.logger.debug "before_save callback \{{meth.id}} returned false, aborting"
+              return false
+            end
           \{% end %}
           true
         }
@@ -48,7 +57,10 @@ module Neo4j
       macro after_save(*method_syms)
         @@_after_save_callback = ->(obj : {{@type.id}}) {
           \{% for meth in method_syms %}
-            return false unless obj.\{{meth.id}}
+            unless obj.\{{meth.id}}
+              Neo4jModel.settings.logger.debug "after_save callback \{{meth.id}} returned false, aborting"
+              return false
+            end
           \{% end %}
           true
         }

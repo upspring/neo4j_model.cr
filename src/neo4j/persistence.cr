@@ -158,7 +158,7 @@ module Neo4j
 
       unless skip_callbacks
         unless @@_before_save_callback.call(self)
-          puts "before_save callback failed!"
+          Neo4jModel.settings.logger.debug "before_save callback returned false, aborting"
           return false
         end
       end
@@ -251,7 +251,7 @@ module Neo4j
 
       unless skip_callbacks
         unless @@_after_save_callback.call(self)
-          puts "after_save callback failed!"
+          Neo4jModel.settings.logger.debug "after_save callback returned false, aborting"
           return false
         end
       end

@@ -10,6 +10,7 @@ Arranged in reverse chronological order (latest changes on top).
 * Updated to Crystal 0.27.1
 * Increased default connection pool size from 5 to 25 (and added a setting)
 * Filled in missing return types
+* Improved debug output when a callback fails (i.e. returns false)
 
 ## v0.9.1 - 2019-01-19
 

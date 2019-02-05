@@ -24,7 +24,7 @@ module Neo4j
     def valid?(*, skip_callbacks = false)
       unless skip_callbacks
         unless @@_before_validation_callback.call(self)
-          puts "before_validation callback failed!"
+          Neo4jModel.settings.logger.debug "before_validation callback returned false, aborting"
           return false
         end
       end
@@ -33,7 +33,7 @@ module Neo4j
 
       unless skip_callbacks
         unless @@_after_validation_callback.call(self)
-          puts "after_validation callback failed!"
+          Neo4jModel.settings.logger.debug "after_validation callback returned false, aborting"
           return false
         end
       end
