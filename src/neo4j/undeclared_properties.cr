@@ -19,7 +19,7 @@ module Neo4j
     def []=(key : Symbol | String, val : Neo4j::Type) : Neo4j::Type
       {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
       if key.to_s == "{{var}}"
-        set_attributes({"{{var}}" => val})
+        set_attributes({"{{var}}" => val.as(PropertyType)})
         return val
       end
       {% end %}
