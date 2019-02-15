@@ -57,13 +57,19 @@ module Neo4j
                 when Integer
                   self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
                 when String
-                  val = hash["{{var}}"].as(String).to_i?
-                  if val.nil?
+                  if val.blank?
                     {% if var.type.union? && var.type.union_types.includes?(Nil) %}
                       self.{{var}} = nil
                     {% end %}
                   else
-                    self.{{var}} = val
+                    val = hash["{{var}}"].as(String).to_i?
+                    if val.nil?
+                      {% if var.type.union? && var.type.union_types.includes?(Nil) %}
+                        self.{{var}} = nil
+                      {% end %}
+                    else
+                      self.{{var}} = val
+                    end
                   end
                 else
                   raise "Don't know how to convert #{val.class.name} to Integer"
@@ -73,11 +79,19 @@ module Neo4j
               if (val = hash["{{var}}"]?)
                 case val
                 when Time
-                  self.{{var}} = hash["{{var}}"].as(Time)
+                  self.{{var}} = val.as(Time)
                 when Integer
-                  self.{{var}} = Time.unix(hash["{{var}}"].as(Int))
+                  self.{{var}} = Time.unix(val.as(Int))
+                when String
+                  if val.blank?
+                    {% if var.type.union? && var.type.union_types.includes?(Nil) %}
+                      self.{{var}} = nil
+                    {% end %}
+                  else
+                    # FIXME: interpret string values?
+                    raise "Don't know how to convert #{val.class.name} to Time"
+                  end
                 else
-                  # FIXME: interpret string values?
                   raise "Don't know how to convert #{val.class.name} to Time"
                 end
               end
