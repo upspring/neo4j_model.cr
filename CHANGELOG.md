@@ -7,10 +7,11 @@ Arranged in reverse chronological order (latest changes on top).
 * Added: #pluck (to avoid constructing model objects when all you want are property values)
 * Fixed: Several issues with relationship property get/set
 * Fixed: Several issues with using undeclared properties API to access declared properties
-* Updated to Crystal 0.27.1
+* Updated to Crystal 0.27.2
 * Increased default connection pool size from 5 to 25 (and added a setting)
 * Filled in missing return types
 * Improved debug output when a callback fails (i.e. returns false)
+* Better handling for incoming blank strings (e.g. from web form submission)
 
 ## v0.9.1 - 2019-01-19
 
