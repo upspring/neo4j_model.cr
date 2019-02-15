@@ -290,7 +290,7 @@ module Neo4j
           { "#{obj_variable_name}.`#{prop}`", dir }
         end
 
-        def build_cypher_query(var_name = obj_variable_name) : String
+        def build_cypher_query(var_name = obj_variable_name, skip_return = false) : String
           @cypher_query = String.build do |cypher_query|
             cypher_query << @match
 
@@ -336,20 +336,22 @@ module Neo4j
               end
             end
 
-            if @ret != ""
-              if @ret_distinct
-                # DISTINCT doesn't do what we typically want when there are multiple return values
-                # cypher_query << " #{@ret.gsub(obj_variable_name, "DISTINCT #{obj_variable_name}")}"
-                cypher_query << " #{@ret.gsub(/,.*?$/, "").gsub(obj_variable_name, "DISTINCT #{obj_variable_name}")}"
-              else
-                cypher_query << " #{@ret}"
+            unless skip_return
+              if @ret != ""
+                if @ret_distinct
+                  # DISTINCT doesn't do what we typically want when there are multiple return values
+                  # cypher_query << " #{@ret.gsub(obj_variable_name, "DISTINCT #{obj_variable_name}")}"
+                  cypher_query << " #{@ret.gsub(/,.*?$/, "").gsub(obj_variable_name, "DISTINCT #{obj_variable_name}")}"
+                else
+                  cypher_query << " #{@ret}"
+                end
               end
-            end
 
-            if @create_merge == "" && @ret !~ /delete/i && @ret !~ /count/i
-              cypher_query << " ORDER BY " + @order_bys.map { |(prop, dir)| "#{prop} #{dir.to_s}" }.join(", ") if @order_bys.any?
-              cypher_query << " SKIP #{@skip}" if @skip.to_i > 0
-              cypher_query << " LIMIT #{@limit}" if @limit.to_i > 0 && @match =~ /MATCH/i
+              if @create_merge == "" && @ret !~ /delete/i && @ret !~ /count/i
+                cypher_query << " ORDER BY " + @order_bys.map { |(prop, dir)| "#{prop} #{dir.to_s}" }.join(", ") if @order_bys.any?
+                cypher_query << " SKIP #{@skip}" if @skip.to_i > 0
+                cypher_query << " LIMIT #{@limit}" if @limit.to_i > 0 && @match =~ /MATCH/i
+              end
             end
           end
 
@@ -359,8 +361,8 @@ module Neo4j
           @cypher_query.not_nil!
         end
 
-        def execute(skip_build = false) : QueryProxy
-          build_cypher_query unless skip_build
+        def execute(skip_build = false, skip_return = false) : QueryProxy
+          build_cypher_query(skip_return: skip_return) unless skip_build
 
           {{@type.id}}.with_connection do |conn|
             elapsed_ms = Time.measure { @raw_result = conn.execute(@cypher_query, @cypher_params) }.milliseconds
@@ -381,18 +383,20 @@ module Neo4j
               fields = type.fields
             end
 
-            result.each do |data|
-              if (fields == [obj_variable_name.to_s, rel_variable_name.to_s]) || # the most common case
-                 (fields == [obj_variable_name.to_s])                            # the next most common case
-                if (node = data[0]?.try &.as?(Neo4j::Node))
-                  obj = {{@type.id}}.new(node)
-                  @_objects << obj
-                  if (rel = data[1]?.try &.as?(Neo4j::Relationship))
-                    @_rels << Relationship.new(rel, clone_for_chain.where(uuid: obj.uuid))
+            unless skip_return
+              result.each do |data|
+                if (fields == [obj_variable_name.to_s, rel_variable_name.to_s]) || # the most common case
+                  (fields == [obj_variable_name.to_s])                            # the next most common case
+                  if (node = data[0]?.try &.as?(Neo4j::Node))
+                    obj = {{@type.id}}.new(node)
+                    @_objects << obj
+                    if (rel = data[1]?.try &.as?(Neo4j::Relationship))
+                      @_rels << Relationship.new(rel, clone_for_chain.where(uuid: obj.uuid))
+                    end
                   end
+                else # something a little bit more complex... user will sort it out :-D
+                  @return_values << Hash.zip(fields, data)
                 end
-              else # something a little bit more complex... user will sort it out :-D
-                @return_values << Hash.zip(fields, data)
               end
             end
 

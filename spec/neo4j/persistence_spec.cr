@@ -1,14 +1,14 @@
 require "../spec_helper"
 
 describe Neo4jModel do
-  it "should support String and Int properties" do
+  it "supports String and Int properties" do
     m = Movie.new
     m.name = "Aviator"
     m.year = 2004
     m.save.should be_true
   end
 
-  it "should support Array(String) properties" do
+  it "supports Array(String) properties" do
     m = Movie.create(name: "Aviator", year: 2004)
 
     val = ["test1", "test2"]
@@ -23,7 +23,7 @@ describe Neo4jModel do
     m.example_array.should eq val
   end
 
-  it "should support Hash(String, String) properties" do
+  it "supports Hash(String, String) properties" do
     m = Movie.create(name: "Aviator", year: 2004)
 
     val = {"test1" => "test2"}
@@ -38,14 +38,14 @@ describe Neo4jModel do
     m.example_hash.should eq val
   end
 
-  it "should update timestamps if present" do
+  it "updates timestamps if present" do
     m = Movie.create(name: "Titanic", year: 1997)
     m = Movie.find!(m.uuid)
     m.created_at.not_nil!.year.should be > 2001
     m.updated_at.not_nil!.year.should be > 2001
   end
 
-  it "should get/set undeclared String, Int and Bool properties via hash" do
+  it "can get/set undeclared String, Int and Bool properties via hash" do
     m = Movie.create(name: "Titanic", year: 1997)
     m["str-1"] = "asdf"
     m["int"] = 123
@@ -77,7 +77,7 @@ describe Neo4jModel do
     m.get_bool("released").should be_true
   end
 
-  it "should support reload (re-read properties from database)" do
+  it "supports reload (re-read properties from database)" do
     m = Movie.create(name: "Titanic", year: 1997)
     m.year = 12345
     m.reload

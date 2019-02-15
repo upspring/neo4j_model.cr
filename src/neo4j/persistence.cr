@@ -229,7 +229,7 @@ module Neo4j
         values = Hash.zip(@_changes.keys, @_changes.values.map { |v| v[:new_value] })
 
         if persisted?
-          self.class.where(uuid: @_uuid).set(values).execute
+          self.class.where(uuid: @_uuid).set(values).execute(skip_return: true)
         else
           values[:uuid] = @_uuid
           self.class.new_create_proxy.set(values).execute.first
