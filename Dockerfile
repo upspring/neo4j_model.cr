@@ -10,7 +10,7 @@ RUN apt-get update && apt-get upgrade -y -o Dpkg::Options::="--force-confnew"
 WORKDIR /tmp
 
 # Pick a Crystal version and install the .deb: https://github.com/crystal-lang/crystal/releases
-RUN curl -sL https://github.com/crystal-lang/crystal/releases/download/0.27.1/crystal_0.27.1-1_amd64.deb > crystal.deb
+RUN curl -sL https://github.com/crystal-lang/crystal/releases/download/0.27.2/crystal_0.27.2-1_amd64.deb > crystal.deb
 RUN apt-get install -y ./crystal.deb
 
 RUN apt-get install -y libyaml-dev
