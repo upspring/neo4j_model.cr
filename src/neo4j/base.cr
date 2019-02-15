@@ -38,8 +38,12 @@ module Neo4j
       class_getter label : String = "{{@type.name}}"
 
       def {{@type.id}}.with_connection
-        ConnectionPool.connection do |connection|
-          yield connection
+        if Neo4jModel.settings.pool_size > 0
+          ConnectionPool.connection do |connection|
+            yield connection
+          end
+        else
+          yield Neo4j::Bolt::Connection.new(Neo4jModel.settings.neo4j_bolt_url, ssl: false)
         end
       end
 
