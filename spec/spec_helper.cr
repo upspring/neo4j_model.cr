@@ -20,9 +20,8 @@ class Movie
   property year : Integer?
   property released : Bool = true
 
-  # help wanted: come up with more plausible example properties
-  property example_array : Array(String)?
-  property example_hash : Hash(String, String)?
+  property tags : Array(String)?
+  property metadata : Hash(String, String)?
 
   property created_at : Time? = Time.utc_now
   property updated_at : Time? = Time.utc_now

@@ -11,31 +11,27 @@ describe Neo4jModel do
   it "supports Array(String) properties" do
     m = Movie.create(name: "Aviator", year: 2004)
 
-    val = ["test1", "test2"]
+    val = ["tag1", "tag2"]
 
-    # temporary
-    m.example_array = val
+    m.tags = val
     m.save.should be_true
 
     m = Movie.find!(m.uuid)
 
-    # temporary
-    m.example_array.should eq val
+    m.tags.should eq val
   end
 
   it "supports Hash(String, String) properties" do
     m = Movie.create(name: "Aviator", year: 2004)
 
-    val = {"test1" => "test2"}
+    val = {"key" => "val"}
 
-    # temporary
-    m.example_hash = val
+    m.metadata = val
     m.save.should be_true
 
     m = Movie.find!(m.uuid)
 
-    # temporary
-    m.example_hash.should eq val
+    m.metadata.should eq val
   end
 
   it "updates timestamps if present" do
