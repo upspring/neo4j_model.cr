@@ -73,11 +73,30 @@ describe Neo4jModel do
     m.get_bool("released").should be_true
   end
 
-  it "supports reload (re-read properties from database)" do
+  it "supports #touch (set updated_at timestamp) and #reload (re-read properties from database)" do
     m = Movie.create(name: "Titanic", year: 1997)
+
+    orig_updated_at = m.updated_at.not_nil!
+    sleep 1.1 # FIXME, there must be a way to simulate a different time
+    m.touch
+
     m.year = 12345
     m.reload
+
     m.year.should eq 1997
+    m.updated_at.not_nil!.should be > orig_updated_at
+  end
+
+  it "supports #update_columns (skips callbacks, including setting updated_at timestamp)" do
+    m = Movie.create(name: "Titanic", year: 1991)
+    m.reload
+    orig_updated_at = m.updated_at
+
+    sleep 1.1 # FIXME, there must be a way to simulate a different time
+    m.update_columns(year: 1997)
+    m.reload
+
+    m.updated_at.should eq orig_updated_at
   end
 
   # it "should get/set undeclared String, Int and Bool properties via hash" do

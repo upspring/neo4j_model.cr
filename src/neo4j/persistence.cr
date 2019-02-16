@@ -23,6 +23,10 @@ module Neo4j
       !@_persisted
     end
 
+    def touch : Bool
+      update_columns(updated_at: Time.utc_now)
+    end
+
     def set_attributes(from node : Neo4j::Node) : Bool
       hash = Hash(String, PropertyType).new
       node.properties.each { |k, v| hash[k] = v.as(PropertyType) }
@@ -210,8 +214,7 @@ module Neo4j
       end
 
       # then persist changeset to database
-      @_changes.reject!(:created_at)                   # reject changes to created_at once set
-      @_changes.reject!(:updated_at) if skip_callbacks # reject changes to updated_at when called via update_columns
+      @_changes.reject!(:created_at) # reject changes to created_at once set
 
       unless @_changes.empty?
         {% unless @type.instance_vars.select { |v| v.id == "created_at" }.empty? %}
@@ -221,7 +224,7 @@ module Neo4j
         {% end %}
         {% unless @type.instance_vars.select { |v| v.id == "updated_at" }.empty? %}
         if (t = @updated_at)
-          @_changes[:updated_at] = {old_value: t.to_unix, new_value: (@updated_at = Time.utc_now).to_unix}
+          @_changes[:updated_at] = {old_value: t.to_unix, new_value: (@updated_at = Time.utc_now).to_unix} unless skip_callbacks
         end
         {% end %}
 
