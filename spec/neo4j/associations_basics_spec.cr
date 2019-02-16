@@ -17,10 +17,12 @@ describe Neo4jModel do
     Movie.find!(m.uuid).director.should eq d
     Director.find!(d.uuid).movies.to_a.should eq [m]
 
+    # can remove by calling .delete on the has_many...
     d.movies.delete(m)
     Movie.find!(m.uuid).director.should_not eq d
     Director.find!(d.uuid).movies.to_a.should_not contain m
 
+    # ... or by setting the belongs_to to nil...
     d.movies << m
     Movie.find!(m.uuid).director.should eq d
     Director.find!(d.uuid).movies.to_a.should eq [m]
@@ -28,6 +30,29 @@ describe Neo4jModel do
     m.director = nil
     m.save
     Movie.find!(m.uuid).director.should_not eq d
+    Director.find!(d.uuid).movies.to_a.should_not contain m
+
+    # ... or by setting the belongs_to _id pseudo-attribute to nil...
+    d.movies << m
+    Movie.find!(m.uuid).director.should eq d
+    Director.find!(d.uuid).movies.to_a.should eq [m]
+
+    m.director_id.should_not be_nil
+    m.director_id = nil
+    m.save
+    Movie.find!(m.uuid).director.should be_nil
+    Director.find!(d.uuid).movies.to_a.should_not contain m
+
+    # ... or by setting the belongs_to _id pseudo-attribute to ""
+    d.movies << m
+    Movie.find!(m.uuid).director.should eq d
+    Director.find!(d.uuid).movies.to_a.should eq [m]
+
+    m = Movie.find!(m.uuid)
+    m.director_id.should_not be_nil
+    m.director_id = ""
+    m.save
+    Movie.find!(m.uuid).director.should be_nil
     Director.find!(d.uuid).movies.to_a.should_not contain m
   end
 
@@ -73,7 +98,7 @@ describe Neo4jModel do
     Agent.find!(agent.uuid).actors.to_a.should eq [actor]
 
     agent.actors.delete(actor)
-    Actor.find!(actor.uuid).agent.should_not eq agent
+    Actor.find!(actor.uuid).agent.should be_nil
     Agent.find!(agent.uuid).actors.to_a.should_not contain actor
 
     agent.actors << actor
@@ -82,7 +107,30 @@ describe Neo4jModel do
 
     actor.agent = nil
     actor.save
-    Actor.find!(actor.uuid).agent.should_not eq agent
+    Actor.find!(actor.uuid).agent.should be_nil
+    Agent.find!(agent.uuid).actors.to_a.should_not contain actor
+
+    agent.actors << actor
+    Actor.find!(actor.uuid).agent.should eq agent
+    Agent.find!(agent.uuid).actors.to_a.should eq [actor]
+
+    actor.agent_id.should_not be_nil
+    actor.agent_id = nil
+    puts "before save"
+    actor.save
+    puts "after save"
+    Actor.find!(actor.uuid).agent.should be_nil
+    Agent.find!(agent.uuid).actors.to_a.should_not contain actor
+
+    agent.actors << actor
+    Actor.find!(actor.uuid).agent.should eq agent
+    Agent.find!(agent.uuid).actors.to_a.should eq [actor]
+
+    actor = Actor.find!(actor.uuid)
+    actor.agent_id.should_not be_nil
+    actor.agent_id = ""
+    actor.save
+    Actor.find!(actor.uuid).agent.should be_nil
     Agent.find!(agent.uuid).actors.to_a.should_not contain actor
   end
 end

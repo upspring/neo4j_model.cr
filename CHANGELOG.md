@@ -8,6 +8,7 @@ Arranged in reverse chronological order (latest changes on top).
 * Added: #touch (updates updated_at timestamp, skips other callbacks)
 * Fixed: Several issues with relationship property get/set
 * Fixed: Several issues with using undeclared properties API to access declared properties
+* Fixed: Can remove belongs_to/has_one associated objects by setting to nil or ""
 * Updated to Crystal 0.27.2
 * Filled in missing return types
 * Better handling for incoming blank strings (e.g. from web form submission)

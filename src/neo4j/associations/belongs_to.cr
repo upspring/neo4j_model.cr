@@ -7,14 +7,12 @@ module Neo4j
       {%
         name = (name == "" ? klass.id.underscore : name.id)
         plural = if plural == ""
-                   # can handle a very extremely simple cases here
+                   # can handle a few very extremely simple cases here
                    (name + "s").gsub(/sss$/, "sses").gsub(/mans$/, "men").gsub(/childs$/, "children")
                  else
                    plural.id
                  end
       %}
-
-      setter {{name}}_id : String?
 
       class QueryProxy
         # QueryProxy instance method, for chaining
@@ -42,7 +40,11 @@ module Neo4j
 
       # instance method, for normal use (returns object)
       def {{name}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r) : {{klass.id}}?
-        {{plural}}(assoc_obj_variable_name, assoc_rel_variable_name).first_with_rel?
+        return nil if @_{{name}}_delete_on_save
+        if (obj = {{plural}}(assoc_obj_variable_name, assoc_rel_variable_name).first_with_rel?)
+          _node.properties["{{name}}_id"] = obj.uuid
+          obj
+        end
       end
 
       def {{name}}=(target : {{klass.id}}?) : {{klass.id}}?
@@ -58,7 +60,17 @@ module Neo4j
         if @{{name}}_id
           @{{name}}_id
         elsif (obj = {{name}})
-          @{{name}}_id = obj.uuid
+          @{{name}}_id = obj.id
+        end
+      end
+
+      def {{name}}_id=(target_id : String?) : String?
+        if target_id
+          @_{{name}}_delete_on_save = false
+          @{{name}}_id = target_id
+        else
+          @_{{name}}_delete_on_save = true
+          @{{name}}_id = nil
         end
       end
 
@@ -66,7 +78,7 @@ module Neo4j
         # remove any existing rels of this type
         {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})<-[r:{{rel_type.id}}]-(m)", "DELETE r").execute
 
-        if (target_uuid = {{name}}_id)
+        if !@_{{name}}_delete_on_save && (target_uuid = {{name}}_id)
           {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: '#{target_uuid}'})",
                                        "MERGE (n)<-[r:{{rel_type.id}}]-(m)", "RETURN n").execute
         end

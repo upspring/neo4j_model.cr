@@ -245,12 +245,17 @@ module Neo4j
 
       # look for changes to associations and persist as needed
       {% for var in @type.instance_vars.select { |v| v.id =~ /_ids?$/ && !(v.id =~ /^_/) } %}
+        # has_many/belongs_to_many
         {% if var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
           if (old_value = @_node.properties["{{var}}"]?) != (new_value = @{{var}}.to_json)
             @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
             persist_{{var}}
           end
+
+        # belongs_to/has_one
         {% else %}
+          # "" (usually from a web form submission) is translated to nil to remove the rel
+          @{{var}} = nil if @{{var}} == ""
           if (old_value = @_node.properties["{{var}}"]?) != (new_value = @{{var}})
             @_changes[:{{var}}] = { old_value: old_value, new_value: new_value }
             persist_{{var}}
