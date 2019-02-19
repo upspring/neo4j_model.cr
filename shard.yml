@@ -13,3 +13,7 @@ dependencies:
     github: jgaskins/neo4j.cr
   pool:
     github: ysbaddaden/pool
+
+development_dependencies:
+  timecop:
+    github: waterlink/timecop.cr

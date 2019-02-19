@@ -1,4 +1,5 @@
 require "../spec_helper"
+require "timecop"
 
 describe Neo4jModel do
   it "supports String and Int properties" do
@@ -74,10 +75,11 @@ describe Neo4jModel do
   end
 
   it "supports #touch (set updated_at timestamp) and #reload (re-read properties from database)" do
+    Timecop.freeze(1.hour.ago)
     m = Movie.create(name: "Titanic", year: 1997)
+    Timecop.reset
 
     orig_updated_at = m.updated_at.not_nil!
-    sleep 1.1 # FIXME, there must be a way to simulate a different time
     m.touch
 
     m.year = 12345
@@ -88,14 +90,14 @@ describe Neo4jModel do
   end
 
   it "supports #update_columns (skips callbacks, including setting updated_at timestamp)" do
+    Timecop.freeze(1.hour.ago)
     m = Movie.create(name: "Titanic", year: 1991)
-    m.reload
-    orig_updated_at = m.updated_at
+    Timecop.reset
 
-    sleep 1.1 # FIXME, there must be a way to simulate a different time
+    m.reload # to reset m.updated_at to less precise value from db
+    orig_updated_at = m.updated_at
     m.update_columns(year: 1997)
     m.reload
-
     m.updated_at.should eq orig_updated_at
   end
 
