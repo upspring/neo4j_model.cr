@@ -264,7 +264,9 @@ module Neo4j
                 if k.to_s == "id"
                   Neo4jModel.settings.logger.debug "WARNING: `id` used in where clause. Did you mean `uuid`?"
                 end
-                if v
+                if v.nil?
+                  "(#{obj_variable_name}.`#{k}` IS NULL)"
+                else
                   if v.is_a?(Array)
                     new_params["#{k}_w#{index}"] = v
                     "(#{obj_variable_name}.`#{k}` IN $`#{k}_w#{index}`)"
@@ -272,8 +274,6 @@ module Neo4j
                     new_params["#{k}_w#{index}"] = v
                     "(#{obj_variable_name}.`#{k}` = $`#{k}_w#{index}`)"
                   end
-                else
-                  "(#{obj_variable_name}.`#{k}` IS NULL)"
                 end
               }.join(" AND ")
             else
@@ -447,7 +447,7 @@ module Neo4j
           {{@type.id}}.with_connection do |conn|
             conn.execute(@cypher_query, @cypher_params).each do |result|
               if props.size == 1
-                flat_array << result[0] if result[0]?
+                flat_array << result[0] if result.size > 0
               else
                 hash = Hash(Symbol | String, Neo4j::Type).new
                 result.each_with_index { |val, index| hash[props[index]] = val }
