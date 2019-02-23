@@ -36,99 +36,87 @@ module Neo4j
     def set_attributes(hash : Hash(String, PropertyType)) : Bool
       {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
         if hash.has_key?("{{var}}")
-          if hash["{{var}}"].nil?
+          if (val = hash["{{var}}"]).nil?
             # set to nil ONLY IF property type includes Nil
             {% if var.type.union? && var.type.union_types.includes?(Nil) %}
               self.{{var}} = nil
             {% end %}
           else
             {% if var.type <= Bool || (var.type.union? && var.type.union_types.includes?(Bool)) %}
-              if (val = hash["{{var}}"]?)
-                case val
-                when Bool
-                  self.{{var}} = val
-                when Int
-                  self.{{var}} = (val == 1)
-                when String
-                  self.{{var}} = ["1", "true"].includes?(val.downcase)
-                else
-                  raise "Don't know how to convert #{val.class.name} to Bool"
-                end
+              case val
+              when Bool
+                self.{{var}} = val
+              when Int
+                self.{{var}} = (val == 1)
+              when String
+                self.{{var}} = ["1", "true"].includes?(val.downcase)
+              else
+                raise "Don't know how to convert #{val.class.name} to Bool"
               end
             {% elsif var.type <= Integer || (var.type.union? && (var.type.union_types.includes?(Int8) || var.type.union_types.includes?(Int16) || var.type.union_types.includes?(Int32) || var.type.union_types.includes?(Int64))) %}
-              if (val = hash["{{var}}"]?)
-                case val
-                when Integer
-                  self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
-                when String
-                  if val.blank?
+              case val
+              when Integer
+                self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+              when String
+                if val.blank?
+                  {% if var.type.union? && var.type.union_types.includes?(Nil) %}
+                    self.{{var}} = nil
+                  {% end %}
+                else
+                  val = hash["{{var}}"].as(String).to_i?
+                  if val.nil?
                     {% if var.type.union? && var.type.union_types.includes?(Nil) %}
                       self.{{var}} = nil
                     {% end %}
                   else
-                    val = hash["{{var}}"].as(String).to_i?
-                    if val.nil?
-                      {% if var.type.union? && var.type.union_types.includes?(Nil) %}
-                        self.{{var}} = nil
-                      {% end %}
-                    else
-                      self.{{var}} = val
-                    end
+                    self.{{var}} = val
                   end
-                else
-                  raise "Don't know how to convert #{val.class.name} to Integer"
                 end
+              else
+                raise "Don't know how to convert #{val.class.name} to Integer"
               end
             {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
-              if (val = hash["{{var}}"]?)
-                case val
-                when Time
-                  self.{{var}} = val.as(Time)
-                when Integer
-                  self.{{var}} = Time.unix(val.as(Int))
-                when String
-                  if val.blank?
-                    {% if var.type.union? && var.type.union_types.includes?(Nil) %}
-                      self.{{var}} = nil
-                    {% end %}
-                  else
-                    # FIXME: interpret string values?
-                    raise "Don't know how to convert #{val.class.name} to Time"
-                  end
+              case val
+              when Time
+                self.{{var}} = val.as(Time)
+              when Integer
+                self.{{var}} = Time.unix(val.as(Int))
+              when String
+                if val.blank?
+                  {% if var.type.union? && var.type.union_types.includes?(Nil) %}
+                    self.{{var}} = nil
+                  {% end %}
                 else
+                  # FIXME: interpret string values?
                   raise "Don't know how to convert #{val.class.name} to Time"
                 end
+              else
+                raise "Don't know how to convert #{val.class.name} to Time"
               end
             {% elsif var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
-              if (val = hash["{{var}}"]?)
-                case val
-                when Array
-                  self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
-                when String
-                  if (array = JSON.parse(val).as_a?)
-                    self.{{var}} = array.map(&.as_s)
-                  end
-                else
-                  raise "Don't know how to convert #{val.class.name} to Array(String)"
+              case val
+              when Array
+                self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+              when String
+                if (array = JSON.parse(val).as_a?)
+                  self.{{var}} = array.map(&.as_s)
                 end
+              else
+                raise "Don't know how to convert #{val.class.name} to Array(String)"
               end
             {% elsif var.type <= Hash(String, String) || (var.type.union? && var.type.union_types.includes?(Hash(String, String))) %}
-              if (val = hash["{{var}}"]?)
-                case val
-                when Hash
-                  self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
-                when String
-                  if (h = JSON.parse(val).as_h?)
-                    self.{{var}} = h.transform_values { |v| v.to_s }
-                  end
-                else
-                  raise "Don't know how to convert #{val.class.name} to Hash"
+              case val
+              when Hash
+                self.{{var}} = hash["{{var}}"].as(typeof(@{{var}}))
+              when String
+                if (h = JSON.parse(val).as_h?)
+                  self.{{var}} = h.transform_values { |v| v.to_s }
                 end
+              else
+                raise "Don't know how to convert #{val.class.name} to Hash"
               end
             {% elsif var.type <= String || (var.type.union? && var.type.union_types.includes?(String)) %}
-              if hash.has_key?("{{var}}")
-                self.{{var}} = hash["{{var}}"].to_s
-              end
+              self.{{var}} = hash["{{var}}"].to_s
             {% end %}
           end
         end
