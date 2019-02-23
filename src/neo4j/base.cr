@@ -25,14 +25,14 @@ module Neo4j
     macro included
       def_equals(@_uuid)
 
-      def rel : Relationship?
+      def rel : Neo4jModel::Relationship?
         @_rel
       end
 
       # use leading underscore to indicate a property/ivar that should *not* be persisted to neo4j
-      property _uuid : String = UUID.random.to_s # special because it is persisted on create, but never on update
+      property _uuid : String # special because it is persisted on create, but never on update
       property _node : Neo4j::Node # snapshot of db node
-      property _rel : Relationship?
+      property _rel : Neo4jModel::Relationship?
 
       # override if you want to use a different label
       class_getter label : String = "{{@type.name}}"
@@ -47,32 +47,29 @@ module Neo4j
         end
       end
 
-      def initialize
-        initialize(Hash(String, PropertyType).new)
-      end
-
-      def initialize(**params)
-        @_persisted = false
-        @_node = Neo4j::Node.new(0, Array(String).new, Hash(String, Neo4j::Type).new)
-        @_node.properties["uuid"] = @_uuid
-
-        new_hash = Hash(String, PropertyType).new
-        params.each { |k, v| new_hash[k.to_s] = v }
-        set_attributes(new_hash)
-      end
-
-      def initialize(hash : Hash(String, PropertyType))
-        @_persisted = false
-        @_node = Neo4j::Node.new(0, Array(String).new, Hash(String, Neo4j::Type).new)
-        @_node.properties["uuid"] = @_uuid
-        set_attributes(hash)
-      end
-
       def initialize(node : Neo4j::Node)
         @_persisted = true
         @_node = node
         @_uuid = @_node.properties["uuid"].as(String)
         set_attributes(from: @_node)
+      end
+
+      def initialize(hash : Hash(String, PropertyType))
+        @_persisted = false
+        @_uuid = UUID.random.to_s
+        @_node = Neo4j::Node.new(0, Array(String).new, Hash(String, Neo4j::Type).new)
+        @_node.properties["uuid"] = @_uuid
+        set_attributes(hash)
+      end
+
+      def initialize
+        initialize(Hash(String, PropertyType).new)
+      end
+
+      def initialize(**params)
+        new_hash = Hash(String, PropertyType).new
+        params.each { |k, v| new_hash[k.to_s] = v }
+        initialize(new_hash)
       end
     end # macro included
   end

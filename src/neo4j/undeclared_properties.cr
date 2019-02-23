@@ -1,7 +1,7 @@
 module Neo4j
   module Model
     macro included
-      property _undeclared_properties = Neo4j::QueryProxy::CypherParamsHash.new
+      property _undeclared_properties = Neo4jModel::CypherParamsHash.new
     end
 
     def []?(key : Symbol | String) : Neo4j::Type?

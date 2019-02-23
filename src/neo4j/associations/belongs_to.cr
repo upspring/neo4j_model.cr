@@ -14,24 +14,25 @@ module Neo4j
                  end
       %}
 
-      class QueryProxy
+      # FIXME: Convert to registered chainable?
+      class ::Neo4jModel::QueryProxy(T)
         # QueryProxy instance method, for chaining
-        def {{plural}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r) : {{klass.id}}::QueryProxy
-          proxy = {{klass.id}}::QueryProxy.new("MATCH (#{obj_variable_name}:#{label})<-[#{assoc_rel_variable_name}:{{rel_type.id}}]-(#{assoc_obj_variable_name}:#{{{klass.id}}.label})",
-                                               "RETURN #{assoc_obj_variable_name}, #{assoc_rel_variable_name}").query_as(assoc_obj_variable_name, assoc_rel_variable_name)
+        def {{@type.id.underscore}}_belongs_to_{{plural}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r)
+          proxy = {{klass.id}}.query_proxy("MATCH (#{obj_variable_name}:#{label})<-[#{assoc_rel_variable_name}:{{rel_type.id}}]-(#{assoc_obj_variable_name}:#{{{klass.id}}.label})",
+                                            "RETURN #{assoc_obj_variable_name}, #{assoc_rel_variable_name}").query_as(assoc_obj_variable_name, assoc_rel_variable_name)
           self.chain proxy
         end
 
         # QueryProxy instance method, for normal use (returns object)
-        def {{name}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r) : {{klass.id}}?
+        def {{@type.id.underscore}}_belongs_to_{{name}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r) : {{klass.id}}?
           {{plural}}(assoc_obj_variable_name, assoc_rel_variable_name).first_with_rel?
         end
       end
 
       # instance method, to start a chained query
-      def {{plural}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r) : {{klass.id}}::QueryProxy
+      def {{plural}}(assoc_obj_variable_name = :{{name}}, assoc_rel_variable_name = :r)
         # create a proxy for all queries related to this association
-        proxy = QueryProxy.new.{{plural}}(assoc_obj_variable_name, assoc_rel_variable_name)
+        proxy = query_proxy.{{@type.id.underscore}}_belongs_to_{{plural}}(assoc_obj_variable_name, assoc_rel_variable_name)
 
         # this is the beginning of the chain, should start with a uuid match (provided by #query_proxy)
         context = query_proxy
@@ -76,11 +77,11 @@ module Neo4j
 
       def persist_{{name}}_id : Bool
         # remove any existing rels of this type
-        {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'})<-[r:{{rel_type.id}}]-(m)", "DELETE r").execute
+        self.class.query_proxy("MATCH (n:#{label} {uuid: '#{uuid}'})<-[r:{{rel_type.id}}]-(m)", "DELETE r").execute
 
         if !@_{{name}}_delete_on_save && (target_uuid = {{name}}_id)
-          {{klass.id}}::QueryProxy.new("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: '#{target_uuid}'})",
-                                       "MERGE (n)<-[r:{{rel_type.id}}]-(m)", "RETURN n").execute
+          self.class.query_proxy("MATCH (n:#{label} {uuid: '#{uuid}'}), (m:#{{{klass.id}}.label} {uuid: '#{target_uuid}'})",
+                                 "MERGE (n)<-[r:{{rel_type.id}}]-(m)", "RETURN n").execute
         end
 
         true

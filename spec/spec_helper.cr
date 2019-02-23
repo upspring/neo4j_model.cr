@@ -30,44 +30,44 @@ end
 class Director
   include Neo4j::Model
 
-  property name : String?
-
   has_many Movie, rel_type: :directed
   has_one Agent, rel_type: :contracts
+
+  property name : String?
 end
 
 class Actor
   include Neo4j::Model
 
-  property name : String?
-
   has_many Movie, rel_type: :acted_in
   has_one Agent, rel_type: :contracts
 
   has_many Studio, name: :studios_worked_with, rel_type: :worked_with
+
+  property name : String?
 end
 
 class Studio
   include Neo4j::Model
 
-  property name : String?
-
   has_many Movie, rel_type: :owns
+
+  property name : String?
 end
 
 class Genre
   include Neo4j::Model
 
-  property name : String?
-
   has_many Movie, rel_type: :includes
+
+  property name : String?
 end
 
 class Agent
   include Neo4j::Model
 
-  property name : String?
-
   belongs_to_many Director, rel_type: :contracts
   belongs_to_many Actor, rel_type: :contracts
+
+  property name : String?
 end

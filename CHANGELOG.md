@@ -2,6 +2,12 @@
 
 Arranged in reverse chronological order (latest changes on top).
 
+## Unreleased
+
+* Major internal change: Refactored QueryProxy into generic. (If you called MyClass::QueryProxy.new directly, you should now call MyClass.query_proxy instead with same args.)
+* Fixed: Querying false values of boolean props was being treated IS NULL
+* Fixed: Pluck was omitting NULL values (now returns nils as expected)
+
 ## v0.10.0 - 2019-02-16
 
 * Added: #pluck (to avoid constructing model objects when all you want are property values)

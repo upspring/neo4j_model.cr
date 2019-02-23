@@ -2,7 +2,7 @@ language: crystal
 # services:
 #   - neo4j  # uses 3.2.7 as of 2/22/2019, but we need bolt v2
 before_install:
-  - curl -sSL -o neo4j.tar.gz https://neo4j.com/artifact.php?name=neo4j-community-3.5.2-unix.tar.gz
-  - tar xf neo4j.tar.gz && cd neo4j-community-3.5*
+  - curl -sSL https://neo4j.com/artifact.php?name=neo4j-community-3.5.2-unix.tar.gz | tar xz
+  - cd neo4j-community-3.5*
   - bin/neo4j start
   - false ; while [ $? -ne 0 ]; do sleep 1 ; curl -sI http://localhost:7474 | head -1 | grep 200 ; done

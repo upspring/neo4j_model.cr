@@ -93,7 +93,7 @@ end
 Including Neo4j::Model creates an embedded QueryProxy class that you can call directly as needed to run queries not yet supported by the query builder. For example, if Members are nested under both Organization and User and you need to check both, you could do this:
 
 ```crystal
-proxy = Member::QueryProxy.new("MATCH (o:Organization)-->(m:Member)<--(u:User)", "RETURN m").query_as(:m)
+proxy = Member.query_proxy("MATCH (o:Organization)-->(m:Member)<--(u:User)", "RETURN m").query_as(:m)
 member = proxy.where("o.uuid = $o_uuid AND u.uuid = $u_uuid", o_uuid: org.uuid, u_uuid: user.uuid).limit(1).first?
 ```
 
