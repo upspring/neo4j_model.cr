@@ -2,6 +2,15 @@
 
 Arranged in reverse chronological order (latest changes on top).
 
+## v1.0.0 - 2019-04-05
+
+It's not perfect, but it's good enough for a 1.0 release. There are lots of things I'd like to clean up, and I'd definitely like to reduce the impact on compile times, but it's plenty usable as-is.
+
+* Fixed: Querying false values of boolean props was being treated IS NULL
+* Fixed: Pluck was omitting NULL values (now returns nils as expected)
+* Reworded "Neo4jModel doesn't know how to convert [type] to [type]" message to make it obvious that it's coming from Neo4jModel
+* Updated to work with neo4j.cr 0.4
+
 ## v0.10.0 - 2019-02-16
 
 * Added: #pluck (to avoid constructing model objects when all you want are property values)

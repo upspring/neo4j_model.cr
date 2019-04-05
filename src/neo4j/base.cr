@@ -53,7 +53,7 @@ module Neo4j
 
       def initialize(**params)
         @_persisted = false
-        @_node = Neo4j::Node.new(0, Array(String).new, Hash(String, Neo4j::Type).new)
+        @_node = Neo4j::Node.new(0, Array(String).new, Hash(String, Neo4j::ValueType).new)
         @_node.properties["uuid"] = @_uuid
 
         new_hash = Hash(String, PropertyType).new
@@ -63,7 +63,7 @@ module Neo4j
 
       def initialize(hash : Hash(String, PropertyType))
         @_persisted = false
-        @_node = Neo4j::Node.new(0, Array(String).new, Hash(String, Neo4j::Type).new)
+        @_node = Neo4j::Node.new(0, Array(String).new, Hash(String, Neo4j::ValueType).new)
         @_node.properties["uuid"] = @_uuid
         set_attributes(hash)
       end

@@ -9,7 +9,7 @@ module Neo4j
     #   property created_at : Time? = Time.utc_now
     #   property updated_at : Time? = Time.utc_now
 
-    alias Changeset = NamedTuple(old_value: Neo4j::Type, new_value: Neo4j::Type)
+    alias Changeset = NamedTuple(old_value: Neo4j::ValueType, new_value: Neo4j::ValueType)
 
     macro included
       property _changes = Hash(String | Symbol, Changeset).new
@@ -51,7 +51,7 @@ module Neo4j
               when String
                 self.{{var}} = ["1", "true"].includes?(val.downcase)
               else
-                raise "Don't know how to convert #{val.class.name} to Bool"
+                raise "Neo4jModel doesn't know how to convert #{val.class.name} to Bool"
               end
             {% elsif var.type <= Integer || (var.type.union? && (var.type.union_types.includes?(Int8) || var.type.union_types.includes?(Int16) || var.type.union_types.includes?(Int32) || var.type.union_types.includes?(Int64))) %}
               case val
@@ -73,7 +73,7 @@ module Neo4j
                   end
                 end
               else
-                raise "Don't know how to convert #{val.class.name} to Integer"
+                raise "Neo4jModel doesn't know how to convert #{val.class.name} to Integer"
               end
             {% elsif var.type <= Time || (var.type.union? && var.type.union_types.includes?(Time)) %}
               case val
@@ -88,10 +88,10 @@ module Neo4j
                   {% end %}
                 else
                   # FIXME: interpret string values?
-                  raise "Don't know how to convert #{val.class.name} to Time"
+                  raise "Neo4jModel doesn't know how to convert #{val.class.name} to Time"
                 end
               else
-                raise "Don't know how to convert #{val.class.name} to Time"
+                raise "Neo4jModel doesn't know how to convert #{val.class.name} to Time"
               end
             {% elsif var.type <= Array(String) || (var.type.union? && var.type.union_types.includes?(Array(String))) %}
               case val
@@ -102,7 +102,7 @@ module Neo4j
                   self.{{var}} = array.map(&.as_s)
                 end
               else
-                raise "Don't know how to convert #{val.class.name} to Array(String)"
+                raise "Neo4jModel doesn't know how to convert #{val.class.name} to Array(String)"
               end
             {% elsif var.type <= Hash(String, String) || (var.type.union? && var.type.union_types.includes?(Hash(String, String))) %}
               case val
@@ -113,7 +113,7 @@ module Neo4j
                   self.{{var}} = h.transform_values { |v| v.to_s }
                 end
               else
-                raise "Don't know how to convert #{val.class.name} to Hash"
+                raise "Neo4jModel doesn't know how to convert #{val.class.name} to Hash"
               end
             {% elsif var.type <= String || (var.type.union? && var.type.union_types.includes?(String)) %}
               self.{{var}} = hash["{{var}}"].to_s
