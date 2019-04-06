@@ -5,8 +5,6 @@
 [![License](https://img.shields.io/github/license/upspring/neo4j_model.cr.svg)](https://github.com/upspring/neo4j_model.cr/blob/master/LICENSE)
 [![Gitter](https://img.shields.io/gitter/room/jgaskins/neo4j.cr.svg)](https://gitter.im/jgaskins/neo4j.cr)
 
-Current status: Release candidate. Expecting to reach 1.0 in early 2019. Give it a try!
-
 The goal is a stable and full-featured Neo4j ORM for Crystal. Bolt only, no http or https (uses [neo4j.cr](https://github.com/jgaskins/neo4j.cr)). Inspired by ActiveNode/[Neo4j.rb](https://github.com/neo4jrb/neo4j).
 
 Features:
