@@ -25,6 +25,11 @@ class Movie
 
   property created_at : Time? = Time.utc_now
   property updated_at : Time? = Time.utc_now
+
+  JSON.mapping(
+    name: String,
+    year: Integer?
+  )
 end
 
 class Director

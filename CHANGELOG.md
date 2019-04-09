@@ -2,6 +2,10 @@
 
 Arranged in reverse chronological order (latest changes on top).
 
+## Unreleased
+
+* Fixes to permit use alongside JSON.mapping
+
 ## v1.0.0 - 2019-04-06
 
 It's not perfect, but it's good enough for a 1.0 release. There are lots of things I'd like to clean up, and I'd definitely like to reduce the impact on compile times, but it's plenty usable as-is.

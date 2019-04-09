@@ -116,9 +116,9 @@ describe Neo4jModel do
 
     actor.agent_id.should_not be_nil
     actor.agent_id = nil
-    puts "before save"
+    # puts "before save"
     actor.save
-    puts "after save"
+    # puts "after save"
     Actor.find!(actor.uuid).agent.should be_nil
     Agent.find!(agent.uuid).actors.to_a.should_not contain actor
 

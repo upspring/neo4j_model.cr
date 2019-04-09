@@ -101,6 +101,11 @@ describe Neo4jModel do
     m.updated_at.should eq orig_updated_at
   end
 
+  it "supports JSON.mapping definitions" do
+    m = Movie.create(name: "Titanic", year: 1991)
+    m.to_json.should eq Hash{"name" => "Titanic", "year" => 1991}.to_json
+  end
+
   # it "should get/set undeclared String, Int and Bool properties via hash" do
   #   m = Movie.create(name: "Titanic", year: 1997)
   #   m.update_properties({ "str" => "asdf", "int" => 123, "bool" => true })
