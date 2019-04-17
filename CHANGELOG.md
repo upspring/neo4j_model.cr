@@ -2,7 +2,7 @@
 
 Arranged in reverse chronological order (latest changes on top).
 
-## Unreleased
+## v1.0.1 - 2019-04-17
 
 * Fixes to permit use alongside JSON.mapping
 
