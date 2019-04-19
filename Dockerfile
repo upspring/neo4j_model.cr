@@ -1,5 +1,3 @@
-### Docker image for neo4j_model.cr testing ###
-
 # See https://github.com/phusion/baseimage-docker/releases for a list of releases.
 FROM phusion/baseimage:0.11
 LABEL maintainer="aaronn@upspringdigital.com"
@@ -10,7 +8,7 @@ RUN apt-get update && apt-get upgrade -y -o Dpkg::Options::="--force-confnew"
 WORKDIR /tmp
 
 # Pick a Crystal version and install the .deb: https://github.com/crystal-lang/crystal/releases
-RUN curl -sL https://github.com/crystal-lang/crystal/releases/download/0.27.2/crystal_0.27.2-1_amd64.deb > crystal.deb
+RUN curl -sL https://github.com/crystal-lang/crystal/releases/download/0.28.0/crystal_0.28.0-1_amd64.deb > crystal.deb
 RUN apt-get install -y ./crystal.deb
 
 RUN apt-get install -y libyaml-dev
