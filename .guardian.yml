@@ -1,2 +1,2 @@
 files: ./{spec,src}/**/*.cr
-run: bash -c 'time crystal spec'
+run: crystal spec --warnings all

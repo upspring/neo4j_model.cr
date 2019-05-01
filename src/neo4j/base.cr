@@ -23,7 +23,13 @@ module Neo4j
     end
 
     macro included
+      # allows == and === comparisions
       def_equals(@_uuid)
+
+      # allows use as hash key and makes Array#uniq work
+      def hash
+        @_uuid.hash
+      end
 
       def rel : Relationship?
         @_rel
