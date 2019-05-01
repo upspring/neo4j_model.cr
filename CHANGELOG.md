@@ -5,6 +5,7 @@ Arranged in reverse chronological order (latest changes on top).
 ## Unreleased
 
 * Updated to Crystal 0.28.0
+* Fixed: Set created_at timestamp on update if it is still null for some reason
 
 ## v1.0.1 - 2019-04-17
 
