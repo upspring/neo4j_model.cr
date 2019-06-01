@@ -2,11 +2,17 @@ require "../spec_helper"
 require "timecop"
 
 describe Neo4jModel do
-  it "supports String and Int properties" do
+  it "supports String, Int and Float properties" do
     m = Movie.new
     m.name = "Aviator"
     m.year = 2004
+    m.rating = 4.2
     m.save.should be_true
+
+    m2 = Movie.find!(m.uuid)
+    m2.name.should eq "Aviator"
+    m2.year.should eq 2004
+    m2.rating.should eq 4.2
   end
 
   it "supports Array(String) properties" do
@@ -102,8 +108,8 @@ describe Neo4jModel do
   end
 
   it "supports JSON.mapping definitions" do
-    m = Movie.create(name: "Titanic", year: 1991)
-    m.to_json.should eq Hash{"name" => "Titanic", "year" => 1991}.to_json
+    m = Movie.create(name: "Titanic", year: 1991, rating: 4.2)
+    m.to_json.should eq Hash{"name" => "Titanic", "year" => 1991, "rating" => 4.2}.to_json
   end
 
   # it "should get/set undeclared String, Int and Bool properties via hash" do

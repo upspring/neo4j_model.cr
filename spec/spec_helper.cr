@@ -18,6 +18,7 @@ class Movie
 
   property name : String = "" # make sure we can create non-nilable properties as long as they have default values
   property year : Integer?
+  property rating : Float64?
   property released : Bool = true
 
   property tags : Array(String)?
@@ -28,7 +29,8 @@ class Movie
 
   JSON.mapping(
     name: String,
-    year: Integer?
+    year: Integer?,
+    rating: Float64?
   )
 end
 

@@ -2,9 +2,10 @@
 
 Arranged in reverse chronological order (latest changes on top).
 
-## Unreleased
+## v1.0.2 - 2019-06-01
 
 * Updated to Crystal 0.28.0
+* Added: Support for Float64 properties
 * Fixed: Set created_at timestamp on update if it is still null for some reason
 * Fixed: Defined #hash to make Array#uniq work (as well as other things that depend on having proper hash keys)
 
