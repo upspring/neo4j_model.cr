@@ -5,6 +5,7 @@ Arranged in reverse chronological order (latest changes on top).
 ## Unreleased
 
 * Support for Crystal 0.29.0
+* Fixed: Bug in which #save would refuse to create a new (empty) node when it determined there were no changes to save
 
 ## v1.0.2 - 2019-06-01
 

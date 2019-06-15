@@ -223,9 +223,8 @@ module Neo4j
         end
       end
 
-      # then persist changeset to database
-
-      unless @_changes.empty?
+      # then persist changeset to database (unless there's nothing to save)
+      unless @_changes.empty? && persisted?
         {% unless @type.instance_vars.select { |v| v.id == "created_at" }.empty? %}
         # reject changes to created_at once set
         if (t = @created_at) && !@_node.properties["created_at"]?
