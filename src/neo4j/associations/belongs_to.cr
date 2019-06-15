@@ -8,7 +8,7 @@ module Neo4j
         name = (name == "" ? klass.id.underscore : name.id)
         plural = if plural == ""
                    # can handle a few very extremely simple cases here
-                   (name + "s").gsub(/sss$/, "sses").gsub(/mans$/, "men").gsub(/childs$/, "children")
+                   (name + "s").gsub(/sss$/, "sses").gsub(/ss$/, "ses").gsub(/mans$/, "men").gsub(/childs$/, "children")
                  else
                    plural.id
                  end
