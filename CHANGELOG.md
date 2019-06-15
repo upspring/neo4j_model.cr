@@ -2,9 +2,13 @@
 
 Arranged in reverse chronological order (latest changes on top).
 
+## Unreleased
+
+* Support for Crystal 0.29.0
+
 ## v1.0.2 - 2019-06-01
 
-* Updated to Crystal 0.28.0
+* Support for Crystal 0.28.0
 * Added: Support for Float64 properties
 * Fixed: Set created_at timestamp on update if it is still null for some reason
 * Fixed: Defined #hash to make Array#uniq work (as well as other things that depend on having proper hash keys)
@@ -29,7 +33,7 @@ It's not perfect, but it's good enough for a 1.0 release. There are lots of thin
 * Fixed: Several issues with relationship property get/set
 * Fixed: Several issues with using undeclared properties API to access declared properties
 * Fixed: Can remove belongs_to/has_one associated objects by setting to nil or ""
-* Updated to Crystal 0.27.2
+* Support for Crystal 0.27.2
 * Filled in missing return types
 * Better handling for incoming blank strings (e.g. from web form submission)
 * Increased default connection pool size from 5 to 25 (and added a setting; can also set to zero to disable pool)

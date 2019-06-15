@@ -2,17 +2,20 @@
 FROM phusion/baseimage:0.11
 LABEL maintainer="aaronn@upspringdigital.com"
 
+# Prepare to install/update packages
+RUN apt-get update
+
 # Update packages
-RUN apt-get update && apt-get upgrade -y -o Dpkg::Options::="--force-confnew"
+# RUN apt-get upgrade -y -o Dpkg::Options::="--force-confnew"
 
 WORKDIR /tmp
 
 # Pick a Crystal version and install the .deb: https://github.com/crystal-lang/crystal/releases
-RUN curl -sL https://github.com/crystal-lang/crystal/releases/download/0.28.0/crystal_0.28.0-1_amd64.deb > crystal.deb
+RUN curl -sL https://github.com/crystal-lang/crystal/releases/download/0.29.0/crystal_0.29.0-1_amd64.deb > crystal.deb
 RUN apt-get install -y ./crystal.deb
 
 RUN apt-get install -y libyaml-dev
-RUN apt-get autoremove -y
+# RUN apt-get autoremove -y
 
 # Build guardian
 RUN git clone https://github.com/f/guardian.git && cd guardian && crystal build src/guardian.cr --release && cp guardian /usr/bin/
