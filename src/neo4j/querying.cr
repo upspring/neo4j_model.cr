@@ -386,7 +386,7 @@ module Neo4j
             unless skip_return
               result.each do |data|
                 if (fields == [obj_variable_name.to_s, rel_variable_name.to_s]) || # the most common case
-                  (fields == [obj_variable_name.to_s])                            # the next most common case
+                  (fields == [obj_variable_name.to_s])                             # the next most common case
                   if (node = data[0]?.try &.as?(Neo4j::Node))
                     obj = {{@type.id}}.new(node)
                     @_objects << obj

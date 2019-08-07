@@ -10,8 +10,8 @@ RUN apt-get update
 
 WORKDIR /tmp
 
-# Pick a Crystal version and install the .deb: https://github.com/crystal-lang/crystal/releases
-RUN curl -sL https://github.com/crystal-lang/crystal/releases/download/0.29.0/crystal_0.29.0-1_amd64.deb > crystal.deb
+# Pick a Crystal version and install the amd64 .deb: https://github.com/crystal-lang/crystal/releases
+RUN curl -sL https://github.com/crystal-lang/crystal/releases/download/0.30.0/crystal_0.30.0-1_amd64.deb > crystal.deb
 RUN apt-get install -y ./crystal.deb
 
 RUN apt-get install -y libyaml-dev
