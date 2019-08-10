@@ -115,7 +115,7 @@ module Neo4j
     end
 
     # this form is mainly for internal use, but use it if you need it
-    def order(prop : Symbol, dir : SortDirection = Neo4j::QueryProxy::SortDirection::ASC) : QueryProxy
+    def order(prop : Symbol | String, dir : SortDirection = Neo4j::QueryProxy::SortDirection::ASC) : QueryProxy
       @order_bys << expand_order_by(prop, dir)
       clone_for_chain
     end
@@ -286,8 +286,15 @@ module Neo4j
           { expanded_str, new_params }
         end
 
+        # symbols are interpreted as property names
         def expand_order_by(prop : Symbol, dir : SortDirection) : Tuple(String, SortDirection)
           { "#{obj_variable_name}.`#{prop}`", dir }
+        end
+
+        # strings are passed through as-is
+        # ex: "last_updated_at IS NOT NULL" (so that NULLs appear before actual values)
+        def expand_order_by(str : String, dir : SortDirection) : Tuple(String, SortDirection)
+          { str, dir }
         end
 
         def build_cypher_query(var_name = obj_variable_name, skip_return = false) : String

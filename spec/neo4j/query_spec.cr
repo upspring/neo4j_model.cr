@@ -69,6 +69,15 @@ describe Neo4jModel do
     Movie.order(:year).pluck("year").should eq [1997, 2004]
     Movie.order(:year).pluck(:uuid, :year).should eq [{:uuid => m.uuid, :year => 1997}, {:uuid => n.uuid, :year => 2004}]
     Movie.order(:year).pluck("uuid", "year").should eq [{"uuid" => m.uuid, "year" => 1997}, {"uuid" => n.uuid, "year" => 2004}]
+
+    # some quick ORDER BY tests
+    n = Movie.create(name: "Test Movie", year: nil)
+    Movie.count.should eq 3
+
+    Movie.order(year: :desc).pluck(:year).should eq [nil, 2004, 1997]
+    Movie.order("movie.year").pluck(:year).should eq [1997, 2004, nil]
+    Movie.order("movie.year", Neo4j::QueryProxy::SortDirection::DESC).pluck(:year).should eq [nil, 2004, 1997]
+    Movie.order("movie.year IS NOT NULL", :year).pluck(:year).should eq [nil, 1997, 2004]
   end
 
   it "supports set_label/remove_label queries" do
