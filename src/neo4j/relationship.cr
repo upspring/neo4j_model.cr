@@ -6,7 +6,7 @@ module Neo4j
         getter _query_proxy : QueryProxy
 
         # there will be declared properties at some point
-        getter _undeclared_properties = Hash(String, Neo4j::ValueType).new
+        getter _undeclared_properties = Hash(String, Neo4j::Value).new
 
         def initialize(@_relationship, @_query_proxy)
         end
@@ -20,7 +20,7 @@ module Neo4j
           self[key]?
         end
 
-        def []=(key : Symbol | String, val : Neo4j::ValueType) : Neo4j::ValueType
+        def []=(key : Symbol | String, val : Neo4j::Value) : Neo4j::Value
           _undeclared_properties[key.to_s] = val
         end
 
@@ -36,7 +36,7 @@ module Neo4j
           self[prop]?.try &.as?(Bool)
         end
 
-        def set(prop : String | Symbol, val : Neo4j::ValueType)
+        def set(prop : String | Symbol, val : Neo4j::Value)
           self[prop] = val
         end
 

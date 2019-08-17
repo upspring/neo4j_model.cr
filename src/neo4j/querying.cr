@@ -1,8 +1,8 @@
 module Neo4j
   # works with a very simplified model of Cypher (MATCH, WHEREs, ORDER BYs, SKIP, LIMIT, RETURN)
   class QueryProxy
-    alias ParamsHash = Hash(Symbol | String, Neo4j::ValueType)
-    alias CypherParamsHash = Hash(String, Neo4j::ValueType)
+    alias ParamsHash = Hash(Symbol | String, Neo4j::Value)
+    alias CypherParamsHash = Hash(String, Neo4j::Value)
     alias Where = Tuple(String, String, ParamsHash)
     alias ExpandedWhere = Tuple(String, CypherParamsHash)
     enum SortDirection
@@ -71,7 +71,7 @@ module Neo4j
       new_hash = ParamsHash.new
       params.each do |k, v|
         if v.is_a?(Array) # not entirely sure why this is needed (but it is)
-          new_hash[k] = v.map(&.as(Neo4j::ValueType))
+          new_hash[k] = v.map(&.as(Neo4j::Value))
         else
           new_hash[k] = v
         end
@@ -443,8 +443,8 @@ module Neo4j
           props_with_var = props.map { |p| "#{obj_variable_name}.`#{p}`" }.join(", ")
           orig_ret, @ret = @ret, "RETURN #{props_with_var}"
 
-          flat_array = Array(Neo4j::ValueType).new
-          hash_array = Array(Hash(Symbol | String, Neo4j::ValueType)).new
+          flat_array = Array(Neo4j::Value).new
+          hash_array = Array(Hash(Symbol | String, Neo4j::Value)).new
 
           build_cypher_query
           @ret = orig_ret
@@ -456,7 +456,7 @@ module Neo4j
               if props.size == 1
                 flat_array << result[0] if result.size > 0
               else
-                hash = Hash(Symbol | String, Neo4j::ValueType).new
+                hash = Hash(Symbol | String, Neo4j::Value).new
                 result.each_with_index { |val, index| hash[props[index]] = val }
                 hash_array << hash
               end

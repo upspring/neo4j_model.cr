@@ -1,2 +1,2 @@
 files: ./{spec,src}/**/*.cr
-run: crystal spec --warnings all
+run: crystal spec --warnings all --error-trace

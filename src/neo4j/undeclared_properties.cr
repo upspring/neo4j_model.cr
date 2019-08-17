@@ -4,19 +4,19 @@ module Neo4j
       property _undeclared_properties = Neo4j::QueryProxy::CypherParamsHash.new
     end
 
-    def []?(key : Symbol | String) : Neo4j::ValueType?
+    def []?(key : Symbol | String) : Neo4j::Value?
       {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
-        return @{{var}}.as(Neo4j::ValueType?) if key.to_s == "{{var}}"
+        return @{{var}}.as(Neo4j::Value?) if key.to_s == "{{var}}"
       {% end %}
       _undeclared_properties[key.to_s]? || _node.properties[key.to_s]?
     end
 
-    def [](key : Symbol | String) : Neo4j::ValueType?
+    def [](key : Symbol | String) : Neo4j::Value?
       raise IndexError.new unless _undeclared_properties.has_key?(key.to_s) || _node.properties.has_key?(key.to_s)
       self[key]?
     end
 
-    def []=(key : Symbol | String, val : Neo4j::ValueType) : Neo4j::ValueType
+    def []=(key : Symbol | String, val : Neo4j::Value) : Neo4j::Value
       {% for var in @type.instance_vars.reject { |v| v.name =~ /^_/ } %}
       if key.to_s == "{{var}}"
         set_attributes({"{{var}}" => val.as(PropertyType)})
@@ -27,7 +27,7 @@ module Neo4j
       _undeclared_properties[key.to_s] = val
     end
 
-    def get(prop : String | Symbol) : Neo4j::ValueType?
+    def get(prop : String | Symbol) : Neo4j::Value?
       self[prop]?
     end
 
@@ -47,7 +47,7 @@ module Neo4j
       end
     end
 
-    def set(prop : String | Symbol, val : Neo4j::ValueType)
+    def set(prop : String | Symbol, val : Neo4j::Value)
       self[prop] = val
     end
   end

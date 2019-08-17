@@ -9,7 +9,7 @@ module Neo4j
     #   property created_at : Time? = Time.utc_now
     #   property updated_at : Time? = Time.utc_now
 
-    alias Changeset = NamedTuple(old_value: Neo4j::ValueType, new_value: Neo4j::ValueType)
+    alias Changeset = NamedTuple(old_value: Neo4j::Value, new_value: Neo4j::Value)
 
     macro included
       property _changes = Hash(String | Symbol, Changeset).new
@@ -226,15 +226,15 @@ module Neo4j
       # then persist changeset to database (unless there's nothing to save)
       unless @_changes.empty? && persisted?
         {% unless @type.instance_vars.select { |v| v.id == "created_at" }.empty? %}
-        # reject changes to created_at once set
-        if (t = @created_at) && !@_node.properties["created_at"]?
-          @_changes[:created_at] = {old_value: nil, new_value: t.to_unix}
-        end
+          # reject changes to created_at once set
+          if (t = @created_at) && !@_node.properties["created_at"]?
+            @_changes[:created_at] = {old_value: nil, new_value: t.to_unix}
+          end
         {% end %}
         {% unless @type.instance_vars.select { |v| v.id == "updated_at" }.empty? %}
-        if (t = @updated_at)
-          @_changes[:updated_at] = {old_value: t.to_unix, new_value: (@updated_at = Time.utc_now).to_unix} unless skip_callbacks
-        end
+          if (t = @updated_at)
+            @_changes[:updated_at] = {old_value: t.to_unix, new_value: (@updated_at = Time.utc_now).to_unix} unless skip_callbacks
+          end
         {% end %}
 
         # values = @_changes.transform_values { |v| v[:new_value] } # why doesn't this work?

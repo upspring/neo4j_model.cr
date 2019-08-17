@@ -38,7 +38,7 @@ module Neo4j
       # use leading underscore to indicate a property/ivar that should *not* be persisted to neo4j
       property _persisted : Bool = false
       property _uuid : String = UUID.random.to_s # special because it is persisted on create, but never on update
-      property _node : Neo4j::Node = Neo4j::Node.new(0, Array(String).new, Hash(String, Neo4j::ValueType).new) # snapshot of db node
+      property _node : Neo4j::Node = Neo4j::Node.new(0_i64, Array(String).new, Hash(String, Neo4j::Value).new) # snapshot of db node
       property _rel : Relationship?
 
       # override if you want to use a different label
