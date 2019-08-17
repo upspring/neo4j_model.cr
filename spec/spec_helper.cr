@@ -5,7 +5,12 @@ require "../src/neo4j_model"
 Spec.before_each { detach_all }
 
 def detach_all
-  Movie.with_connection(&.execute "MATCH (n) DETACH DELETE n")
+  Movie.with_connection(&.execute "MATCH (n:Movie) DETACH DELETE n")
+  Director.with_connection(&.execute "MATCH (n:Director) DETACH DELETE n")
+  Actor.with_connection(&.execute "MATCH (n:Actor) DETACH DELETE n")
+  Studio.with_connection(&.execute "MATCH (n:Studio) DETACH DELETE n")
+  Genre.with_connection(&.execute "MATCH (n:Genre) DETACH DELETE n")
+  Agent.with_connection(&.execute "MATCH (n:Agent) DETACH DELETE n")
 end
 
 class Movie
