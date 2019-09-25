@@ -3,6 +3,7 @@ module Neo4j
   class QueryProxy
     alias ParamsHash = Hash(Symbol | String, Neo4j::Value)
     alias CypherParamsHash = Hash(String, Neo4j::Value)
+    alias ReturnValuesHash = Hash(String, Neo4j::Value?)
     alias Where = Tuple(String, String, ParamsHash)
     alias ExpandedWhere = Tuple(String, CypherParamsHash)
     enum SortDirection
@@ -16,7 +17,7 @@ module Neo4j
     getter cypher_query : String?
     getter cypher_params = CypherParamsHash.new
     getter raw_result : Neo4j::Result?
-    getter return_values = Array(CypherParamsHash).new
+    getter return_values = Array(ReturnValuesHash).new
 
     property obj_variable_name : String = "n"
     property rel_variable_name : String = "r"
@@ -402,7 +403,7 @@ module Neo4j
                     end
                   end
                 else # something a little bit more complex... user will sort it out :-D
-                  @return_values << Hash.zip(fields, data)
+                  @return_values << Hash.zip(fields, data.map { |d| d.as(Neo4j::Value?) })
                 end
               end
             end

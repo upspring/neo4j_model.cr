@@ -5,11 +5,11 @@ module Neo4j
     alias PropertyType = Nil | Bool | String | Integer | Float64 | Time | Array(String) | Hash(String, String)
 
     # if you want to use timestamps, add something like this to your model class
-    # (make sure to initialize to a non-nil value, like Time.utc_now)
-    #   property created_at : Time? = Time.utc_now
-    #   property updated_at : Time? = Time.utc_now
+    # (make sure to initialize to a non-nil value, like Time.utc)
+    #   property created_at : Time? = Time.utc
+    #   property updated_at : Time? = Time.utc
 
-    alias Changeset = NamedTuple(old_value: Neo4j::Value, new_value: Neo4j::Value)
+    alias Changeset = NamedTuple(old_value: Neo4j::Value?, new_value: Neo4j::Value?)
 
     macro included
       property _changes = Hash(String | Symbol, Changeset).new
@@ -24,7 +24,7 @@ module Neo4j
     end
 
     def touch : Bool
-      update_columns(updated_at: Time.utc_now)
+      update_columns(updated_at: Time.utc)
     end
 
     def set_attributes(from node : Neo4j::Node) : Bool
@@ -233,7 +233,7 @@ module Neo4j
         {% end %}
         {% unless @type.instance_vars.select { |v| v.id == "updated_at" }.empty? %}
           if (t = @updated_at)
-            @_changes[:updated_at] = {old_value: t.to_unix, new_value: (@updated_at = Time.utc_now).to_unix} unless skip_callbacks
+            @_changes[:updated_at] = {old_value: t.to_unix, new_value: (@updated_at = Time.utc).to_unix} unless skip_callbacks
           end
         {% end %}
 

@@ -29,8 +29,8 @@ class Movie
   property tags : Array(String)?
   property metadata : Hash(String, String)?
 
-  property created_at : Time? = Time.utc_now
-  property updated_at : Time? = Time.utc_now
+  property created_at : Time? = Time.utc
+  property updated_at : Time? = Time.utc
 
   JSON.mapping(
     name: String,

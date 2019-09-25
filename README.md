@@ -54,8 +54,8 @@ class Server
   has_many Website, name: :inactive_websites, rel_type: :USED_TO_HOST # adds .inactive_websites
 
   property name : String?
-  property created_at : Time? = Time.utc_now
-  property updated_at : Time? = Time.utc_now
+  property created_at : Time? = Time.utc
+  property updated_at : Time? = Time.utc
 end
 ```
 
@@ -78,8 +78,8 @@ class Website
   property supports_http2 : Bool = false
   property nameservers : Array(String) = [] of String # defining it as an Array triggers the auto-serializer
   property some_hash : Hash(String, String)? # hashes ought to work too, but... not tested yet
-  property created_at : Time? = Time.utc_now # will be set on create
-  property updated_at : Time? = Time.utc_now # will be set on update
+  property created_at : Time? = Time.utc # will be set on create
+  property updated_at : Time? = Time.utc # will be set on update
 
   def generate_api_key
     @api_key ||= UUID.random.to_s
