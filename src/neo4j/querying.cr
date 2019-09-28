@@ -147,6 +147,11 @@ module Neo4j
       clone_for_chain
     end
 
+    def reorder(*params) : QueryProxy
+      @order_bys.clear
+      order(*params)
+    end
+
     def reorder(**params) : QueryProxy
       @order_bys.clear
       order(**params)
