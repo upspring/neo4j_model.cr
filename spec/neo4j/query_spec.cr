@@ -48,6 +48,8 @@ describe Neo4jModel do
     m3 = Movie.create(name: "Futurama: Bender's Big Score", year: nil)
 
     Movie.where(year: [1997, 2004]).order(:year).to_a.should eq [m, m2]
+    Movie.where(year: [1997, 2004]).order(:name).reorder(:year).to_a.should eq [m, m2]
+    Movie.where(year: [1997, 2004]).order(:name).unorder.order(:year).to_a.should eq [m, m2]
     Movie.where(name: ["Titanic", "The Aviator"]).order(:year).to_a.should eq [m, m2]
     Movie.where(uuid: [m.id, m2.id]).order(:year).to_a.should eq [m, m2]
 
