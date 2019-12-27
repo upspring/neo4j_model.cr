@@ -45,20 +45,14 @@ module Neo4j
       class_getter label : String = "{{@type.name}}"
 
       def {{@type.id}}.with_connection
-        unless Neo4jModel.settings.threadsafe
-          Neo4jModel.settings.mutex.lock
-        end
-
-        if Neo4jModel.settings.pool_size > 0
-          ConnectionPool.connection do |connection|
-            yield connection
+        Neo4jModel.settings.mutex.synchronize do
+          if Neo4jModel.settings.pool_size > 0
+            ConnectionPool.connection do |connection|
+              yield connection
+            end
+          else
+            yield Neo4j::Bolt::Connection.new(Neo4jModel.settings.neo4j_bolt_url, ssl: false)
           end
-        else
-          yield Neo4j::Bolt::Connection.new(Neo4jModel.settings.neo4j_bolt_url, ssl: false)
-        end
-
-        unless Neo4jModel.settings.threadsafe
-          Neo4jModel.settings.mutex.unlock
         end
       end
 
