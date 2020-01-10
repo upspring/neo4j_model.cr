@@ -17,6 +17,9 @@ describe Neo4jModel do
     Movie.find!(m.uuid).director.should eq d
     Director.find!(d.uuid).movies.to_a.should eq [m]
 
+    # known issue
+    # Director.find!(d.uuid).movies_ids.includes?(d.uuid).should be_true
+
     # can remove by calling .delete on the has_many...
     d.movies.delete(m)
     Movie.find!(m.uuid).director.should_not eq d

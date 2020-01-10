@@ -2,11 +2,11 @@
 
 Arranged in reverse chronological order (latest changes on top).
 
-## Unreleased
+## v1.0.3 - 2020-01-10
 
 * Added: Pass a string to .order (instead of a symbol) and it will be passed through untouched. Example: "last_updated_at IS NOT NULL" (so that NULLs appear before actual values)
 * Support for neo4j.cr 0.5.0
-* Support for Crystal 0.31.1 with MT, including a mutex to synchronize queries
+* Support for Crystal >= 0.31 with MT, adds a mutex to synchronize queries
 * Fixed: Bug in which #save would refuse to create a new (empty) node when it determined there were no changes to save
 
 ## v1.0.2 - 2019-06-01
