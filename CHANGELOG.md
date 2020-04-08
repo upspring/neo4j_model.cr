@@ -2,6 +2,11 @@
 
 Arranged in reverse chronological order (latest changes on top).
 
+## v1.1.0 - 2020-04-09
+
+* Support for Crystal 0.34.0
+* Replaced deprecated Logger with Log (Neo4jModel::Log)
+
 ## v1.0.3 - 2020-01-10
 
 * Added: Pass a string to .order (instead of a symbol) and it will be passed through untouched. Example: "last_updated_at IS NOT NULL" (so that NULLs appear before actual values)

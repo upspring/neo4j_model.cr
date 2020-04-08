@@ -268,7 +268,7 @@ module Neo4j
               cypher_query << params.map { |k, v|
                 # id instead of uuid is a common source of frustration
                 if k.to_s == "id"
-                  Neo4jModel.settings.logger.debug "WARNING: `id` used in where clause. Did you mean `uuid`?"
+                  Neo4jModel::Log.debug { "WARNING: `id` used in where clause. Did you mean `uuid`?" }
                 end
                 if v.nil?
                   "(#{obj_variable_name}.`#{k}` IS NULL)"
@@ -368,8 +368,8 @@ module Neo4j
             end
           end
 
-          Neo4jModel.settings.logger.debug "Constructed Cypher query: #{@cypher_query}"
-          Neo4jModel.settings.logger.debug "  with params: #{@cypher_params.inspect}"
+          Neo4jModel::Log.debug { "Constructed Cypher query: #{@cypher_query}" }
+          Neo4jModel::Log.debug { "  with params: #{@cypher_params.inspect}" }
 
           @cypher_query.not_nil!
         end
@@ -379,7 +379,7 @@ module Neo4j
 
           {{@type.id}}.with_connection do |conn|
             elapsed_ms = Time.measure { @raw_result = conn.execute(@cypher_query, @cypher_params) }.milliseconds
-            Neo4jModel.settings.logger.debug "Executed query (#{elapsed_ms}ms): #{raw_result.not_nil!.type.inspect}"
+            Neo4jModel::Log.debug { "Executed query (#{elapsed_ms}ms): #{raw_result.not_nil!.type.inspect}" }
           rescue ex : Neo4j::QueryException
              # this shouldn't happen anymore, but... leaving it here just in case
             conn.reset

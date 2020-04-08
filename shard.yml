@@ -4,7 +4,7 @@ version: 1.0.3
 authors:
   - Aaron Namba <aaron@aaronnamba.com>
 
-crystal: 0.32.1
+crystal: 0.34.0
 
 license: MIT
 
@@ -17,3 +17,4 @@ dependencies:
 development_dependencies:
   timecop:
     github: waterlink/timecop.cr
+    version: ~> 0.2

@@ -1,5 +1,4 @@
 require "spec"
-require "logger"
 require "../src/neo4j_model"
 
 Spec.before_each { detach_all }

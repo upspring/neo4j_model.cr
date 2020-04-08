@@ -1,10 +1,6 @@
 require "./spec_helper"
 
 describe Neo4jModel do
-  it "creates a logger with progname Neo4jModel" do
-    Neo4jModel.settings.logger.progname.should eq "Neo4jModel"
-  end
-
   it "supports equality by uuid comparison" do
     m1 = Movie.new(name: "Test")
     m2 = Movie.new(name: "Test")

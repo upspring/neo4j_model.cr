@@ -1,4 +1,5 @@
 require "json"
+require "log"
 require "neo4j"
 require "./neo4j/base"
 require "./neo4j/persistence"
@@ -15,17 +16,16 @@ require "./neo4j/associations/belongs_to_many"
 
 # TODO: Write documentation for `Neo4jModel`
 module Neo4jModel
-  VERSION = "1.0.3"
+  VERSION = "1.1.0"
+
+  Log = ::Log.for(self)
 
   class Settings
-    property logger : Logger
     property neo4j_bolt_url : String = ENV["NEO4J_URL"]? || "bolt://neo4j@localhost:7687"
     property pool_size : Int32 = (ENV["NEO4J_POOL_SIZE"]? || "25").to_i
     property mutex : Mutex
 
     def initialize
-      @logger = Logger.new nil
-      @logger.progname = "Neo4jModel"
       @mutex = Mutex.new
     end
   end

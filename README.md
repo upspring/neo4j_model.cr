@@ -40,10 +40,10 @@ dependencies:
 
 See specs for detailed usage.
 
+To direct log output to a file:
+
 ```crystal
-require "neo4j_model"
-Neo4jModel.settings.logger = Amber.settings.logger.dup
-Neo4jModel.settings.logger.progname = "Neo4jModel"
+Log.setup_from_env(backend: Log::IOBackend.new(File.open("log/production.log", "a"))
 ```
 
 ```crystal
