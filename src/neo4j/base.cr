@@ -36,9 +36,13 @@ module Neo4j
       end
 
       # use leading underscore to indicate a property/ivar that should *not* be persisted to neo4j
+      @[JSON::Field(ignore: true)]
       property _persisted : Bool = false
+      @[JSON::Field(ignore: true)]
       property _uuid : String = UUID.random.to_s # special because it is persisted on create, but never on update
+      @[JSON::Field(ignore: true)]
       property _node : Neo4j::Node = Neo4j::Node.new(0_i64, Array(String).new, Hash(String, Neo4j::Value).new) # snapshot of db node
+      @[JSON::Field(ignore: true)]
       property _rel : Relationship?
 
       # override if you want to use a different label

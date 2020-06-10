@@ -103,7 +103,7 @@ member = org.members.users.where(uuid: user.uuid).return(member: :member)
 
 ## Roadmap
 
-For 1.0:
+For 2.0:
 * [#3](https://github.com/upspring/neo4j_model.cr/issues/3) expand QueryProxy#where to accept ranges
 * [#4](https://github.com/upspring/neo4j_model.cr/issues/4) add QueryProxy#update_all (set property values on all matched nodes, skipping callbacks)
 

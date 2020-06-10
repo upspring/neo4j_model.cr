@@ -608,6 +608,7 @@ module Neo4j
       end
 
       # query proxy that returns this instance (used as a base for association queries)
+      @[JSON::Field(ignore: true)]
       @_query_proxy : QueryProxy?
       def query_proxy : QueryProxy
         if (proxy = @_query_proxy)

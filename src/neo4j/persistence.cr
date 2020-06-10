@@ -10,9 +10,11 @@ module Neo4j
     #   property updated_at : Time? = Time.utc
 
     alias Changeset = NamedTuple(old_value: Neo4j::Value?, new_value: Neo4j::Value?)
+    alias ChangesetHash = Hash(String | Symbol, Changeset)
 
     macro included
-      property _changes = Hash(String | Symbol, Changeset).new
+      @[JSON::Field(ignore: true)]
+      property _changes = ChangesetHash.new
     end
 
     def persisted? : Bool
@@ -218,7 +220,8 @@ module Neo4j
       {% end %}
 
       _undeclared_properties.each do |k, v|
-        if (old_value = @_node.properties[k]?) != (new_value = v)
+        old_value, new_value = @_node.properties[k]?, v
+        if old_value != new_value && old_value.is_a?(Neo4j::Value?) && new_value.is_a?(Neo4j::Value?)
           @_changes[k] = {old_value: old_value, new_value: new_value}
         end
       end

@@ -1,6 +1,7 @@
 module Neo4j
   module Model
     macro included
+      @[JSON::Field(ignore: true)]
       property _undeclared_properties = Neo4j::QueryProxy::CypherParamsHash.new
     end
 

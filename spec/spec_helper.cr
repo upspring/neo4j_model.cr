@@ -14,6 +14,7 @@ end
 
 class Movie
   include Neo4j::Model
+  include JSON::Serializable
 
   belongs_to_many Studio, rel_type: :owns
   belongs_to Director, rel_type: :directed
@@ -23,6 +24,7 @@ class Movie
   property name : String = "" # make sure we can create non-nilable properties as long as they have default values
   property year : Integer?
   property rating : Float64?
+
   property released : Bool = true
 
   property tags : Array(String)?
@@ -30,12 +32,6 @@ class Movie
 
   property created_at : Time? = Time.utc
   property updated_at : Time? = Time.utc
-
-  JSON.mapping(
-    name: String,
-    year: Integer?,
-    rating: Float64?
-  )
 end
 
 class Director

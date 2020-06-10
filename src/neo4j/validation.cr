@@ -14,6 +14,7 @@ module Neo4j
   module Model
     macro included
       # use leading underscore to indicate a property/ivar that should *not* be persisted to neo4j
+      @[JSON::Field(ignore: true)]
       property _errors = [] of Neo4j::Error
     end
 
