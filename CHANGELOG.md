@@ -2,9 +2,9 @@
 
 Arranged in reverse chronological order (latest changes on top).
 
-## Unreleased
+## v1.2.0
 
-* Support for Crystal 0.35.0
+* Support for Crystal 1.0
 * Fixes to allow use with JSON::Serializable
 
 ## v1.1.0 - 2020-04-09
